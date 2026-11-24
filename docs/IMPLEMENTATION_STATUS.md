@@ -23,13 +23,13 @@
 - Shared audit service covering project creation/updates/start, team membership, guide assignment, task and milestone changes, submissions, review assignment/decisions and authenticated file downloads
 - SQLite schema with foreign keys, indexes and additive category migration
 - Layered modular-monolith structure: routes, services, repositories, domain enums/lifecycle rules, middleware and database connection
-- Unit tests for proposal/review/start/completion state rules
+- Unit tests for proposal/review/start/completion state rules and cryptographic authentication-token generation
 - Render Blueprint with static frontend, API service and persistent storage
 - UML traceability matrix for all 20 supplied diagram exports
 
 ## Remaining before production
 
-- Run the GitHub Actions build and syntax-check workflow and resolve any failures
+- GitHub Actions frontend build, backend unit tests and server syntax checks pass on the current authentication milestone
 - Add automated API integration tests and browser-level end-to-end tests for all four roles
 - Extend authorization tests for cross-department and non-member access
 - Add audit coverage for remaining read/export operations where a compliance requirement exists
