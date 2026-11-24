@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
 import {
   addMember, assignGuide, createUserProject, editProject, getProjectForUser,
-  listProjects, removeMember
+  listProjects, removeMember, startProject
 } from '../services/projectService.js';
 
 const router = Router();
@@ -19,6 +19,11 @@ router.post('/', (req, res, next) => {
 
 router.get('/:id', (req, res, next) => {
   try { res.json(getProjectForUser(req.user, Number(req.params.id))); }
+  catch (error) { next(error); }
+});
+
+router.post('/:id/start', (req, res, next) => {
+  try { res.json(startProject(req.user, Number(req.params.id))); }
   catch (error) { next(error); }
 });
 
