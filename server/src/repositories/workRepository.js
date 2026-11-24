@@ -83,3 +83,11 @@ export function getSubmissionFeedback(submissionId) {
   return db.prepare(`SELECT f.*, u.name AS reviewer_name FROM feedback f
     JOIN users u ON u.user_id = f.reviewer_id WHERE f.submission_id = ? ORDER BY f.created_at`).all(submissionId);
 }
+
+export function findTask(taskId) {
+  return db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(taskId);
+}
+
+export function findMilestone(milestoneId) {
+  return db.prepare('SELECT * FROM milestones WHERE milestone_id = ?').get(milestoneId);
+}
