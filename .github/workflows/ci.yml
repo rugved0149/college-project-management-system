@@ -21,6 +21,8 @@ jobs:
       - run: node --check server/src/config/database.js
       - run: node --check server/src/middleware/auth.js
       - run: node --check server/src/middleware/upload.js
+      - run: node --check server/src/middleware/fileValidation.js
+      - run: node --check server/src/middleware/fileValidation.test.js
       - run: node --check server/src/routes/auth.js
       - run: node --check server/src/routes/projects.js
       - run: node --check server/src/routes/work.js
