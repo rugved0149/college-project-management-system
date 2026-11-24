@@ -82,7 +82,7 @@ r.get('/settings',(q,s)=>{
 r.put('/settings',(q,s)=>{
   if(!isSystem(q))return fail(s,403,'Only system administrators can configure the system');
   if(!q.body||typeof q.body!=='object'||Array.isArray(q.body))return fail(s,400,'Settings must be an object');
-  const allowed=new Set(['allow_registration','max_upload_mb','require_faculty_approval','maintenance_mode']);
+  const allowed=new Set(['allow_registration']);
   const upsert=db.prepare('INSERT INTO system_settings(setting_key,setting_value,updated_by,updated_at) VALUES(?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=CURRENT_TIMESTAMP');
   const changes=[];
   const tx=db.transaction(()=>{for(const [key,value] of Object.entries(q.body)){if(!allowed.has(key))continue;const val=String(value);if(val.length>200)throw Error('Setting value is too long');upsert.run(key,val,q.user.user_id);changes.push(key)}});
