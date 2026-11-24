@@ -108,4 +108,23 @@ r.get('/audit-logs',(q,s)=>{
   const rows=db.prepare('SELECT a.*,u.name user_name,u.email user_email,u.role user_role FROM audit_logs a LEFT JOIN users u ON u.user_id=a.user_id ORDER BY a.created_at DESC,a.audit_id DESC LIMIT ?').all(limit);
   s.json({logs:rows});
 });
+
+r.get('/departments',allow('SYSTEM_ADMIN'),(q,s)=>s.json({departments:db.prepare('SELECT department_id,name FROM departments ORDER BY name').all()}));
+r.post('/departments',allow('SYSTEM_ADMIN'),(q,s)=>{
+  const name=String(q.body.name||'').trim();
+  if(!name||name.length>100)return fail(s,400,'Department name must contain 1–100 characters');
+  try{
+    const info=db.prepare('INSERT INTO departments(name) VALUES(?)').run(name);
+    audit(q,'DEPARTMENT_CREATED','DEPARTMENT',info.lastInsertRowid,{name});
+    s.status(201).json({department:db.prepare('SELECT * FROM departments WHERE department_id=?').get(info.lastInsertRowid)});
+  }catch(e){if(String(e.message).includes('UNIQUE'))return fail(s,409,'Department already exists');throw e;}
+});
+r.patch('/departments/:id',allow('SYSTEM_ADMIN'),(q,s)=>{
+  const name=String(q.body.name||'').trim();
+  if(!name||name.length>100)return fail(s,400,'Department name must contain 1–100 characters');
+  const result=db.prepare('UPDATE departments SET name=? WHERE department_id=?').run(name,q.params.id);
+  if(!result.changes)return fail(s,404,'Department not found');
+  audit(q,'DEPARTMENT_RENAMED','DEPARTMENT',q.params.id,{name});
+  s.json({success:true});
+});
 export default r;
