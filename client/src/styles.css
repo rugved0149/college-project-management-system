@@ -73,3 +73,12 @@
 @media(max-width:600px){.detail-heading{align-items:flex-start;flex-direction:column}.detail-heading h1{font-size:24px}.workspace-panel{padding:15px}.work-row{align-items:flex-start;flex-direction:column}.work-row select{width:100%}.review-card{padding:14px}.review-actions{align-items:stretch;flex-direction:column}.review-actions>*{width:100%}.notification-popover{right:-45px}.member-row{gap:8px}}
 
 .people-role{border:1px solid #dfe5ec;border-radius:6px;padding:6px 8px;background:#fff;color:#44546a;font-size:10px;max-width:180px}
+
+.auth-toggle{display:block;width:100%;border:0;background:transparent;color:#35689f;font-size:11px;font-weight:650;padding:12px 4px 2px}
+.auth-toggle:hover{text-decoration:underline}
+.project-category{display:inline-block;margin:-1px 0 8px;padding:4px 7px;border-radius:5px;background:#f0f4f9;color:#6b7e96;font-size:9px;font-weight:650}
+.feedback-list{display:grid;gap:10px}
+.feedback-row{border:1px solid #edf0f4;border-radius:8px;padding:12px}
+.feedback-row b{font-size:10px;color:#3d526d}
+.feedback-row p{font-size:11px;color:#5f6e81;line-height:1.6;margin:7px 0}
+.feedback-row small{font-size:9px;color:#929dac}
