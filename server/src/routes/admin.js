@@ -23,6 +23,7 @@ r.patch('/users/:id/role',(q,s)=>{
   if(!target)return fail(s,404,'User not found');
   if(!roles.includes(q.body.role))return fail(s,400,'Invalid role');
   if(!isSystem(q)&&target.department_id!==q.user.department_id)return fail(s,403,'You can only manage users in your department');
+  if(!isSystem(q)&&!['STUDENT','FACULTY'].includes(target.role))return fail(s,403,'Department administrators can only manage student and faculty accounts');
   if(!isSystem(q)&&['DEPARTMENT_ADMIN','SYSTEM_ADMIN'].includes(q.body.role))return fail(s,403,'Only system administrators can assign administrator roles');
   if(target.user_id===q.user.user_id&&q.body.role!==q.user.role)return fail(s,400,'You cannot change your own role');
   db.prepare('UPDATE users SET role=? WHERE user_id=?').run(q.body.role,target.user_id);
@@ -33,6 +34,7 @@ r.patch('/users/:id/active',(q,s)=>{
   const target=db.prepare('SELECT user_id,is_active,department_id FROM users WHERE user_id=?').get(q.params.id);
   if(!target)return fail(s,404,'User not found');
   if(!isSystem(q)&&target.department_id!==q.user.department_id)return fail(s,403,'You can only manage users in your department');
+  if(!isSystem(q)&&!['STUDENT','FACULTY'].includes(db.prepare('SELECT role FROM users WHERE user_id=?').get(target.user_id).role))return fail(s,403,'Department administrators can only manage student and faculty accounts');
   if(target.user_id===q.user.user_id)return fail(s,400,'You cannot disable your own account');
   const active=q.body.active?1:0;
   db.prepare('UPDATE users SET is_active=? WHERE user_id=?').run(active,target.user_id);
@@ -57,6 +59,7 @@ r.post('/categories',allowPermission('categories.manage','DEPARTMENT_ADMIN','SYS
   const name=String(q.body.name||'').trim();
   if(!name||name.length>80)return fail(s,400,'Category name must contain 1–80 characters');
   const departmentId=isSystem(q)?(q.body.department_id||null):q.user.department_id;
+  if(departmentId!==null&&!db.prepare('SELECT 1 FROM departments WHERE department_id=?').get(departmentId))return fail(s,400,'Department not found');
   try{
     const info=db.prepare('INSERT INTO categories(name,description,department_id) VALUES(?,?,?)').run(name,String(q.body.description||'').trim().slice(0,500),departmentId);
     audit(q,'CATEGORY_CREATED','CATEGORY',info.lastInsertRowid,{name});
@@ -85,7 +88,7 @@ r.put('/settings',(q,s)=>{
   const allowed=new Set(['allow_registration']);
   const upsert=db.prepare('INSERT INTO system_settings(setting_key,setting_value,updated_by,updated_at) VALUES(?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=CURRENT_TIMESTAMP');
   const changes=[];
-  const tx=db.transaction(()=>{for(const [key,value] of Object.entries(q.body)){if(!allowed.has(key))continue;const val=String(value);if(val.length>200)throw Error('Setting value is too long');upsert.run(key,val,q.user.user_id);changes.push(key)}});
+  const tx=db.transaction(()=>{for(const [key,value] of Object.entries(q.body)){if(!allowed.has(key))continue;const val=String(value);if(key==='allow_registration'&&!['true','false'].includes(val))throw Error('allow_registration must be true or false');if(val.length>200)throw Error('Setting value is too long');upsert.run(key,val,q.user.user_id);changes.push(key)}});
   try{tx();}catch(e){return fail(s,400,e.message)}
   audit(q,'SYSTEM_SETTINGS_UPDATED','SYSTEM',null,{keys:changes});
   s.json({success:true,updated:changes});
@@ -122,9 +125,6 @@ r.post('/departments',allow('SYSTEM_ADMIN'),(q,s)=>{
 r.patch('/departments/:id',allow('SYSTEM_ADMIN'),(q,s)=>{
   const name=String(q.body.name||'').trim();
   if(!name||name.length>100)return fail(s,400,'Department name must contain 1–100 characters');
-  const result=db.prepare('UPDATE departments SET name=? WHERE department_id=?').run(name,q.params.id);
-  if(!result.changes)return fail(s,404,'Department not found');
-  audit(q,'DEPARTMENT_RENAMED','DEPARTMENT',q.params.id,{name});
-  s.json({success:true});
+  try{const result=db.prepare('UPDATE departments SET name=? WHERE department_id=?').run(name,q.params.id);if(!result.changes)return fail(s,404,'Department not found');audit(q,'DEPARTMENT_RENAMED','DEPARTMENT',q.params.id,{name});s.json({success:true})}catch(e){if(String(e.message).includes('UNIQUE'))return fail(s,409,'Department already exists');throw e;}
 });
 export default r;
