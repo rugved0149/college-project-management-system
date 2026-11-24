@@ -17,3 +17,11 @@ export function auth(req,res,next){
 export function allow(...roles){
   return(req,res,next)=>roles.includes(req.user.role)?next():res.status(403).json({error:'You do not have permission to perform this action'});
 }
+export function allowPermission(permission,...fallbackRoles){
+  return(req,res,next)=>{
+    if(!fallbackRoles.includes(req.user.role))return res.status(403).json({error:'You do not have permission to perform this action'});
+    const configured=db.prepare('SELECT allowed FROM role_permissions WHERE role=? AND permission=?').get(req.user.role,permission);
+    if(configured&&configured.allowed!==1)return res.status(403).json({error:'This capability is disabled for your role'});
+    next();
+  };
+}
