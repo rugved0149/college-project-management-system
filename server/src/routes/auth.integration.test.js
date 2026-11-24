@@ -9,6 +9,8 @@ import bcrypt from 'bcryptjs';
 process.env.DB_PATH = join(mkdtempSync(join(tmpdir(), 'campusflow-auth-')), 'test.db');
 process.env.JWT_SECRET = 'integration-test-secret-at-least-32-characters';
 process.env.CLIENT_URL = 'http://localhost:5173';
+process.env.BREVO_API_KEY = 'integration-test-key';
+process.env.EMAIL_FROM = 'no-reply@example.edu';
 
 let db;
 let server;
@@ -48,6 +50,35 @@ test('health endpoint responds without authentication', async () => {
   const response = await fetch(baseUrl + '/api/health');
   assert.equal(response.status, 200);
   assert.equal((await response.json()).status, 'ok');
+});
+
+test('student registration accepts a valid email and sends verification email', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, options) => {
+    if (String(input).startsWith('https://api.brevo.com/v3/smtp/email')) {
+      return new Response(null, { status: 201 });
+    }
+    return originalFetch(input, options);
+  };
+  try {
+    const email = 'new.student@example.edu';
+    const response = await fetch(baseUrl + '/api/auth/register', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'New Student',
+        email,
+        password: 'StudentPass123',
+        departmentId
+      })
+    });
+    assert.equal(response.status, 201);
+    assert.match((await response.json()).message, /check your email/i);
+    const created = db.prepare('SELECT role,email_verified FROM users WHERE email=?').get(email);
+    assert.deepEqual(created, { role: 'STUDENT', email_verified: 0 });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('verified user can sign in and access the authenticated profile', async () => {
