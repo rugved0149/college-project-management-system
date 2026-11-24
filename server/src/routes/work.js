@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { auth, allow } from '../middleware/auth.js';
 import {
-  addMilestone, addTask, changeMilestone, changeTask, listReviews, listTasks,
+  addMilestone, addTask, assignSubmissionForReview, changeMilestone, changeTask, listReviews, listTasks,
   reviewProjectSubmission, submitProjectWork
 } from '../services/workService.js';
 
@@ -45,6 +45,11 @@ router.post('/submissions', (req, res, next) => {
     const submission = submitProjectWork(req.user, req.body);
     res.status(201).json({ submission });
   } catch (error) { next(error); }
+});
+
+router.post('/submissions/:id/assign-review', allow('FACULTY', 'DEPARTMENT_ADMIN', 'SYSTEM_ADMIN'), (req, res, next) => {
+  try { res.json(assignSubmissionForReview(req.user, Number(req.params.id))); }
+  catch (error) { next(error); }
 });
 
 router.post('/submissions/:id/review', allow('FACULTY', 'DEPARTMENT_ADMIN', 'SYSTEM_ADMIN'), (req, res, next) => {
