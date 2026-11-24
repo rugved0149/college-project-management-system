@@ -48,7 +48,10 @@ export function getProjectWorkspace(projectId) {
   const submissions = db.prepare(`SELECT s.*, u.name AS submitter_name
     FROM submissions s JOIN users u ON u.user_id = s.submitter_id
     WHERE s.project_id = ? ORDER BY s.submitted_at DESC`).all(projectId);
-  return { project, members, tasks, milestones, submissions };
+  const feedback = db.prepare(`SELECT f.*, u.name AS reviewer_name, s.submission_type
+    FROM feedback f JOIN submissions s ON s.submission_id = f.submission_id
+    JOIN users u ON u.user_id = f.reviewer_id WHERE s.project_id = ? ORDER BY f.created_at DESC`).all(projectId);
+  return { project, members, tasks, milestones, submissions, feedback };
 }
 
 export function createProject({ title, description, userId, categoryId = null }) {
@@ -105,4 +108,8 @@ export function setProjectStatus(projectId, status) {
 export function findActiveCategory(categoryId, departmentId) {
   return db.prepare('SELECT category_id FROM categories WHERE category_id = ? AND is_active = 1 AND (department_id = ? OR department_id IS NULL)')
     .get(categoryId, departmentId);
+}
+
+export function listActiveCategoriesForDepartment(departmentId) {
+  return db.prepare('SELECT category_id,name,description FROM categories WHERE is_active=1 AND (department_id=? OR department_id IS NULL) ORDER BY name').all(departmentId);
 }
