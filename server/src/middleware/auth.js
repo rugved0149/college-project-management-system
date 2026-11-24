@@ -6,8 +6,10 @@ export function auth(req,res,next){
     const token=(req.headers.authorization||'').replace(/^Bearer /,'');
     if(!token)throw Error();
     const payload=jwt.verify(token,process.env.JWT_SECRET);
-    const user=db.prepare('SELECT user_id,name,email,role,department_id,is_active FROM users WHERE user_id=?').get(payload.user_id);
+    const user=db.prepare('SELECT user_id,name,email,role,department_id,is_active,email_verified,session_version FROM users WHERE user_id=?').get(payload.user_id);
     if(!user||!user.is_active)return res.status(401).json({error:'Your account is inactive or no longer exists'});
+    if(!user.email_verified)return res.status(403).json({error:'Verify your email address before using the workspace'});
+    if((payload.session_version ?? 0)!==user.session_version)return res.status(401).json({error:'Your session has expired. Please sign in again.'});
     req.user=user;
     next();
   }catch{
