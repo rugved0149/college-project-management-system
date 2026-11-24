@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState} from 'react';
 import AdminConsole from './pages/AdminConsole.jsx';
-import {NavLink,Route,Routes,useNavigate} from 'react-router-dom';
+import {NavLink,Route,Routes,useLocation,useNavigate} from 'react-router-dom';
 import {Activity,ArrowUpRight,Bell,BookOpen,CalendarDays,CheckCircle2,ChevronDown,ClipboardList,FolderKanban,GraduationCap,LayoutDashboard,LogOut,Menu,Plus,Search,Settings,ShieldCheck,Users,X} from 'lucide-react';
 
 const API=import.meta.env.VITE_API_URL||'http://localhost:5000/api';
@@ -8,7 +8,7 @@ async function request(path,options={}){const token=localStorage.getItem('cf_tok
 const nav=[['/', 'Overview',LayoutDashboard],['/projects','Projects',FolderKanban],['/tasks','Tasks & milestones',ClipboardList],['/reviews','Review queue',CheckCircle2],['/people','People',Users],['/reports','Reports',Activity],['/administration','Administration',Settings]];
 const sample=[{project_id:1,title:'Campus Sustainability Initiative',description:'A student-led plan to reduce campus waste and improve resource efficiency.',status:'IN_PROGRESS',owner_name:'Aarav Mehta',member_count:4,updated_at:'2026-11-20'},{project_id:2,title:'Smart Attendance Platform',description:'A secure attendance workflow for academic departments.',status:'UNDER_REVIEW',owner_name:'Ira Kulkarni',member_count:3,updated_at:'2026-11-18'},{project_id:3,title:'Library Resource Portal',description:'A unified interface for discovering and reserving learning resources.',status:'PROPOSAL_SUBMITTED',owner_name:'Rohan Patil',member_count:5,updated_at:'2026-11-16'}];
 const title=s=>String(s||'').toLowerCase().replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
-function App(){const [user,setUser]=useState(()=>JSON.parse(localStorage.getItem('cf_user')||'null'));const [projects,setProjects]=useState([]);const [notice,setNotice]=useState('');const [mobile,setMobile]=useState(false);const [query,setQuery]=useState('');const navigate=useNavigate();
+function App(){const location=useLocation();const [user,setUser]=useState(()=>JSON.parse(localStorage.getItem('cf_user')||'null'));const [projects,setProjects]=useState([]);const [notice,setNotice]=useState('');const [mobile,setMobile]=useState(false);const [query,setQuery]=useState('');const navigate=useNavigate();
 async function load(){if(!user)return;try{const d=await request('/projects');setProjects(d.projects||[])}catch(e){setNotice(e.message)}}
 useEffect(()=>{load()},[user]);
 function signIn(u){localStorage.setItem('cf_user',JSON.stringify(u));setUser(u);navigate('/')}
