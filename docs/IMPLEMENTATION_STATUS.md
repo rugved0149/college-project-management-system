@@ -3,7 +3,10 @@
 ## Implemented
 
 - React/Vite responsive CampusFlow workspace with role-aware navigation
-- Student registration and sign-in; bcrypt password hashing, JWT authentication and active-account enforcement
+- Student registration, mandatory email verification, sign-in and profile management; bcrypt password hashing, JWT authentication and active-account enforcement
+- Single-use email-verification tokens (24-hour expiry) and password-reset tokens (1-hour expiry), stored as SHA-256 hashes
+- Password-reset and email-change session revocation through per-user JWT session versions
+- Brevo transactional email integration with rate-limited verification, resend and password-recovery endpoints
 - Four roles: Student, Faculty, Department Administrator and System Administrator
 - Project list, create, category selection and access-controlled project detail
 - Team membership management and faculty-guide assignment
@@ -31,7 +34,6 @@
 - Extend authorization tests for cross-department and non-member access
 - Add audit coverage for remaining read/export operations where a compliance requirement exists
 - Add file content sniffing and malware scanning
-- Add password reset and email verification
 - Add a department deactivation policy (departments are currently renamed rather than deleted to preserve references)
 - Move remaining authentication and administration SQL from route handlers into repository/service modules
 - Validate SQLite backup/restore and persistent-disk behavior
