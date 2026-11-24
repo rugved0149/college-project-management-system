@@ -22,7 +22,7 @@ export default function ProjectDetail({user}) {
   const p=data.project,manager=['SYSTEM_ADMIN','DEPARTMENT_ADMIN'].includes(user.role)||p.owner_id===user.user_id||(user.role==='FACULTY'&&p.guide_id===user.user_id);
   const isMember=data.members.some(m=>m.user_id===user.user_id);
   const canSubmit=isMember&&user.role==='STUDENT'&&(['DRAFT','REVISION_REQUIRED'].includes(p.status)||p.status==='IN_PROGRESS');
-  const canPlan=manager&&['APPROVED','IN_PROGRESS'].includes(p.status);
+  const canPlan=manager&&p.status==='IN_PROGRESS';
   return <div className="detail-page">
     <Link to="/projects" className="back-link"><ArrowLeft size={15}/> All projects</Link>
     <div className="detail-heading"><div><span className="kicker">PROJECT WORKSPACE</span><h1>{p.title}</h1><p>{p.description||'No description has been added.'}</p><span className={'status '+p.status.toLowerCase().replaceAll('_','-')}>{label(p.status)}</span></div>{manager&&p.status==='APPROVED'&&<button className="primary" disabled={busy} onClick={()=>act(()=>api('/projects/'+id+'/start',{method:'POST'}),'Project started')}>Start project</button>}</div>
