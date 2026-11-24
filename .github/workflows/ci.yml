@@ -1,0 +1,23 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npm run build -w client
+      - run: node --check server/src/index.js
+      - run: node --check server/src/routes/auth.js
+      - run: node --check server/src/routes/projects.js
+      - run: node --check server/src/routes/work.js
+      - run: node --check server/src/routes/admin.js
+      - run: node --check server/src/routes/notifications.js
