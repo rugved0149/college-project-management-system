@@ -21,7 +21,8 @@ export async function sendAuthEmail({ to, name, subject, heading, message, actio
   });
   if (!response.ok) {
     const body = await response.text();
-    throw Object.assign(new Error(`Email provider rejected the message (${response.status}): ${body.slice(0, 300)}`), { status: 502 });
+    console.error('Brevo email delivery failed:', response.status, body.slice(0, 300));
+    throw Object.assign(new Error('Unable to send email at this time. Please try again later.'), { status: 502 });
   }
 }
 
