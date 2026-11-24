@@ -16,6 +16,8 @@ jobs:
       - run: npm run build -w client
       - run: npm test -w server
       - run: node --check server/src/index.js
+      - run: node --check server/src/app.js
+      - run: node --check server/src/routes/auth.integration.test.js
       - run: node --check server/src/config/database.js
       - run: node --check server/src/middleware/auth.js
       - run: node --check server/src/middleware/upload.js
