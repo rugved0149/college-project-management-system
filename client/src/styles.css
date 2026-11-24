@@ -71,3 +71,5 @@
 .notification-close{display:flex;align-items:center;gap:5px;margin:9px 0 2px auto}
 @media(max-width:850px){.detail-grid{grid-template-columns:1fr}.create-work-form{align-items:stretch}.create-work-form>*{flex:1 1 180px}.submission-form>*{flex:1 1 180px}}
 @media(max-width:600px){.detail-heading{align-items:flex-start;flex-direction:column}.detail-heading h1{font-size:24px}.workspace-panel{padding:15px}.work-row{align-items:flex-start;flex-direction:column}.work-row select{width:100%}.review-card{padding:14px}.review-actions{align-items:stretch;flex-direction:column}.review-actions>*{width:100%}.notification-popover{right:-45px}.member-row{gap:8px}}
+
+.people-role{border:1px solid #dfe5ec;border-radius:6px;padding:6px 8px;background:#fff;color:#44546a;font-size:10px;max-width:180px}
