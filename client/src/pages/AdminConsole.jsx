@@ -53,8 +53,6 @@ export default function AdminConsole({ user }) {
         setSettings({
           allow_registration: 'true',
           max_upload_mb: '15',
-          require_faculty_approval: 'true',
-          maintenance_mode: 'false',
           ...Object.fromEntries((data.settings || []).map(item => [item.setting_key, item.setting_value]))
         });
       }
@@ -171,9 +169,7 @@ export default function AdminConsole({ user }) {
     {tab === 'settings' && <form className="admin-panel settings-form" onSubmit={saveSettings}>
       <div className="admin-panel-head"><div><h2>System configuration</h2><p>These settings are stored centrally and can be changed by system administrators.</p></div></div>
       <label>Allow new registrations<select value={settings.allow_registration ?? 'true'} onChange={e => setSettings({ ...settings, allow_registration: e.target.value })}><option value="true">Enabled</option><option value="false">Disabled</option></select></label>
-      <label>Require faculty approval<select value={settings.require_faculty_approval ?? 'true'} onChange={e => setSettings({ ...settings, require_faculty_approval: e.target.value })}><option value="true">Required</option><option value="false">Not required</option></select></label>
       <label>Maximum upload size (MB)<input type="number" min="1" max="100" value={settings.max_upload_mb ?? '15'} onChange={e => setSettings({ ...settings, max_upload_mb: e.target.value })}/></label>
-      <label>Maintenance mode<select value={settings.maintenance_mode ?? 'false'} onChange={e => setSettings({ ...settings, maintenance_mode: e.target.value })}><option value="false">Off</option><option value="true">On</option></select></label>
       <button className="primary" disabled={busy}><Save size={15}/> Save configuration</button>
     </form>}
 
