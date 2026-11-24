@@ -1,6 +1,49 @@
-import {Router} from 'express';import {db} from '../config/database.js';import {auth} from '../middleware/auth.js';
-const r=Router();r.use(auth);
-r.get('/',(q,s)=>{const rows=db.prepare(`SELECT p.*,u.name owner_name,(SELECT COUNT(*) FROM project_members m WHERE m.project_id=p.project_id) member_count FROM projects p JOIN users u ON u.user_id=p.owner_id WHERE p.owner_id=? OR p.guide_id=? OR EXISTS(SELECT 1 FROM project_members m WHERE m.project_id=p.project_id AND m.user_id=?) ORDER BY p.updated_at DESC`).all(q.user.user_id,q.user.user_id,q.user.user_id);s.json({projects:rows})});
-r.post('/',(q,s)=>{const {title,description}=q.body;if(!title?.trim())return s.status(400).json({error:'Project title is required'});const info=db.prepare('INSERT INTO projects(title,description,owner_id,department_id) VALUES(?,?,?,(SELECT department_id FROM users WHERE user_id=?))').run(title.trim(),description||'',q.user.user_id,q.user.user_id);db.prepare('INSERT INTO project_members(project_id,user_id) VALUES(?,?)').run(info.lastInsertRowid,q.user.user_id);s.status(201).json({project:db.prepare('SELECT * FROM projects WHERE project_id=?').get(info.lastInsertRowid)})});
-r.get('/:id',(q,s)=>{const p=db.prepare('SELECT * FROM projects WHERE project_id=?').get(q.params.id);if(!p)return s.status(404).json({error:'Project not found'});s.json({project:p,members:db.prepare('SELECT u.user_id,u.name,u.email,u.role FROM project_members m JOIN users u ON u.user_id=m.user_id WHERE m.project_id=?').all(p.project_id),tasks:db.prepare('SELECT * FROM tasks WHERE project_id=?').all(p.project_id),milestones:db.prepare('SELECT * FROM milestones WHERE project_id=?').all(p.project_id)})});
-r.patch('/:id',(q,s)=>{const {title,description,status}=q.body;const allowed=['DRAFT','PROPOSAL_SUBMITTED','UNDER_REVIEW','REVISION_REQUIRED','APPROVED','IN_PROGRESS','COMPLETED','REJECTED'];if(status&&!allowed.includes(status))return s.status(400).json({error:'Invalid project status'});const p=db.prepare('SELECT * FROM projects WHERE project_id=?').get(q.params.id);if(!p)return s.status(404).json({error:'Project not found'});if(p.owner_id!==q.user.user_id&&!['FACULTY','DEPARTMENT_ADMIN','SYSTEM_ADMIN'].includes(q.user.role))return s.status(403).json({error:'Not authorized'});db.prepare('UPDATE projects SET title=?,description=?,status=COALESCE(?,status),updated_at=CURRENT_TIMESTAMP WHERE project_id=?').run(title??p.title,description??p.description,status||null,p.project_id);s.json({project:db.prepare('SELECT * FROM projects WHERE project_id=?').get(p.project_id)})});export default r;
+import { Router } from 'express';
+import { auth } from '../middleware/auth.js';
+import {
+  addMember, assignGuide, createUserProject, editProject, getProjectForUser,
+  listProjects, removeMember
+} from '../services/projectService.js';
+
+const router = Router();
+router.use(auth);
+
+router.get('/', (req, res) => res.json({ projects: listProjects(req.user) }));
+
+router.post('/', (req, res, next) => {
+  try {
+    const project = createUserProject(req.user, req.body);
+    res.status(201).json({ project });
+  } catch (error) { next(error); }
+});
+
+router.get('/:id', (req, res, next) => {
+  try { res.json(getProjectForUser(req.user, Number(req.params.id))); }
+  catch (error) { next(error); }
+});
+
+router.patch('/:id', (req, res, next) => {
+  try { res.json({ project: editProject(req.user, Number(req.params.id), req.body) }); }
+  catch (error) { next(error); }
+});
+
+router.post('/:id/members', (req, res, next) => {
+  try {
+    const member = addMember(req.user, Number(req.params.id), req.body.email);
+    res.status(201).json({ member });
+  } catch (error) { next(error); }
+});
+
+router.delete('/:id/members/:memberId', (req, res, next) => {
+  try {
+    removeMember(req.user, Number(req.params.id), Number(req.params.memberId));
+    res.json({ success: true });
+  } catch (error) { next(error); }
+});
+
+router.put('/:id/guide', (req, res, next) => {
+  try { res.json({ guide: assignGuide(req.user, Number(req.params.id), req.body.email) }); }
+  catch (error) { next(error); }
+});
+
+export default router;
