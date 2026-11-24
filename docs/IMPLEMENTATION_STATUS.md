@@ -26,7 +26,7 @@
 - Run the GitHub Actions build and syntax-check workflow and resolve any failures
 - Add automated API integration tests and browser-level end-to-end tests for all four roles
 - Extend authorization tests for cross-department and non-member access
-- Add file content sniffing, malware scanning and configurable upload limits
+- Add file content sniffing and malware scanning
 - Add password reset and email verification
 - Complete department CRUD and any missing system-administration use cases
 - Validate SQLite backup/restore and persistent-disk behavior
