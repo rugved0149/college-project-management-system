@@ -14,7 +14,7 @@ export default function ProjectDetail({user}) {
   const [milestone,setMilestone]=useState({title:'',dueDate:''});
   const [submission,setSubmission]=useState({submissionType:'PROPOSAL',file:null});
   const [busy,setBusy]=useState(false);
-  async function load(){setLoading(true);setError('');try{setData(await api('/projects/'+id))}catch(e){setError(e.message)}finally{setLoading(false)}}
+  async function load(){setLoading(true);setError('');try{const next=await api('/projects/'+id);setData(next);setSubmission(prev=>({...prev,submissionType:next.project.status==='IN_PROGRESS'?'DELIVERABLE':'PROPOSAL'}))}catch(e){setError(e.message)}finally{setLoading(false)}}
   useEffect(()=>{load()},[id]);
   async function act(fn,message){setBusy(true);setError('');setNotice('');try{await fn();setNotice(message);await load()}catch(e){setError(e.message)}finally{setBusy(false)}}
   if(loading)return <div className="empty">Loading project workspace…</div>;
