@@ -1,8 +1,56 @@
-import {Router} from 'express';import {db} from '../config/database.js';import {auth,allow} from '../middleware/auth.js';
-const r=Router();r.use(auth);
-r.get('/tasks',(q,s)=>s.json({tasks:db.prepare('SELECT t.*,p.title project_title FROM tasks t JOIN projects p ON p.project_id=t.project_id WHERE p.owner_id=? OR p.guide_id=? OR EXISTS(SELECT 1 FROM project_members m WHERE m.project_id=p.project_id AND m.user_id=?)').all(q.user.user_id,q.user.user_id,q.user.user_id)}));
-r.post('/tasks',(q,s)=>{const {projectId,title,description,dueDate,assigneeId}=q.body;if(!projectId||!title)return s.status(400).json({error:'Project and task title are required'});const p=db.prepare('SELECT project_id FROM projects WHERE project_id=?').get(projectId);if(!p)return s.status(404).json({error:'Project not found'});const x=db.prepare('INSERT INTO tasks(project_id,title,description,due_date,assignee_id) VALUES(?,?,?,?,?)').run(projectId,title,description||'',dueDate||null,assigneeId||null);s.status(201).json({task:db.prepare('SELECT * FROM tasks WHERE task_id=?').get(x.lastInsertRowid)})});
-r.patch('/tasks/:id',(q,s)=>{const allowed=['TODO','IN_PROGRESS','COMPLETED'];if(q.body.status&&!allowed.includes(q.body.status))return s.status(400).json({error:'Invalid task status'});db.prepare('UPDATE tasks SET status=COALESCE(?,status),assignee_id=COALESCE(?,assignee_id),due_date=COALESCE(?,due_date) WHERE task_id=?').run(q.body.status||null,q.body.assigneeId||null,q.body.dueDate||null,q.params.id);s.json({success:true})});
-r.get('/reviews',allow('FACULTY','DEPARTMENT_ADMIN','SYSTEM_ADMIN'),(q,s)=>s.json({submissions:db.prepare("SELECT s.*,p.title project_title,u.name submitter_name FROM submissions s JOIN projects p ON p.project_id=s.project_id JOIN users u ON u.user_id=s.submitter_id WHERE s.status='PENDING' ORDER BY s.submitted_at").all()}));
-r.post('/submissions',(q,s)=>{const {projectId,submissionType,filePath,originalName}=q.body;if(!projectId||!['PROPOSAL','DELIVERABLE'].includes(submissionType))return s.status(400).json({error:'Project and valid submission type are required'});const p=db.prepare('SELECT * FROM projects WHERE project_id=?').get(projectId);if(!p)return s.status(404).json({error:'Project not found'});if(submissionType==='PROPOSAL'&&!['DRAFT','REVISION_REQUIRED'].includes(p.status))return s.status(409).json({error:'A proposal can only be submitted for a draft or revision-required project'});if(submissionType==='DELIVERABLE'&&p.status!=='IN_PROGRESS')return s.status(409).json({error:'Deliverables can only be submitted for projects in progress'});const x=db.prepare('INSERT INTO submissions(project_id,submitter_id,submission_type,file_path,original_name) VALUES(?,?,?,?,?)').run(projectId,q.user.user_id,submissionType,filePath||null,originalName||null);db.prepare('UPDATE projects SET status=?,updated_at=CURRENT_TIMESTAMP WHERE project_id=?').run(submissionType==='PROPOSAL'?'PROPOSAL_SUBMITTED':'IN_PROGRESS',projectId);s.status(201).json({submission:db.prepare('SELECT * FROM submissions WHERE submission_id=?').get(x.lastInsertRowid)})});
-r.post('/submissions/:id/review',allow('FACULTY','DEPARTMENT_ADMIN','SYSTEM_ADMIN'),(q,s)=>{const {decision,comments}=q.body;if(!['APPROVED','REVISION_REQUIRED','REJECTED'].includes(decision)||!comments?.trim())return s.status(400).json({error:'A valid decision and feedback are required'});const sub=db.prepare('SELECT * FROM submissions WHERE submission_id=?').get(q.params.id);if(!sub)return s.status(404).json({error:'Submission not found'});const tx=db.transaction(()=>{db.prepare('UPDATE submissions SET status=?,reviewer_id=? WHERE submission_id=?').run(decision,q.user.user_id,sub.submission_id);db.prepare('INSERT INTO feedback(submission_id,reviewer_id,comments) VALUES(?,?,?)').run(sub.submission_id,q.user.user_id,comments);if(sub.submission_type==='PROPOSAL'){db.prepare('UPDATE projects SET status=?,updated_at=CURRENT_TIMESTAMP WHERE project_id=?').run(decision==='APPROVED'?'APPROVED':decision,sub.project_id)}else if(decision==='APPROVED'){const openTasks=db.prepare("SELECT COUNT(*) n FROM tasks WHERE project_id=? AND status!='COMPLETED'").get(sub.project_id).n;const openMilestones=db.prepare('SELECT COUNT(*) n FROM milestones WHERE project_id=? AND is_completed=0').get(sub.project_id).n;const nextStatus=openTasks===0&&openMilestones===0?'COMPLETED':'IN_PROGRESS';db.prepare('UPDATE projects SET status=?,updated_at=CURRENT_TIMESTAMP WHERE project_id=?').run(nextStatus,sub.project_id)}});tx();s.json({success:true})});export default r;
+import { Router } from 'express';
+import { auth, allow } from '../middleware/auth.js';
+import {
+  addMilestone, addTask, changeMilestone, changeTask, listReviews, listTasks,
+  reviewProjectSubmission, submitProjectWork
+} from '../services/workService.js';
+
+const router = Router();
+router.use(auth);
+
+router.get('/tasks', (req, res) => res.json({ tasks: listTasks(req.user) }));
+
+router.post('/tasks', (req, res, next) => {
+  try {
+    if (!req.body.projectId || !req.body.title?.trim()) return res.status(400).json({ error: 'Project and task title are required' });
+    const task = addTask(req.user, req.body);
+    res.status(201).json({ task });
+  } catch (error) { next(error); }
+});
+
+router.patch('/tasks/:id', (req, res, next) => {
+  try { res.json({ task: changeTask(req.user, Number(req.params.id), req.body) }); }
+  catch (error) { next(error); }
+});
+
+router.post('/milestones', (req, res, next) => {
+  try {
+    if (!req.body.projectId || !req.body.title?.trim()) return res.status(400).json({ error: 'Project and milestone title are required' });
+    const milestone = addMilestone(req.user, req.body);
+    res.status(201).json({ milestone });
+  } catch (error) { next(error); }
+});
+
+router.patch('/milestones/:id', (req, res, next) => {
+  try { res.json({ milestone: changeMilestone(req.user, Number(req.params.id), req.body) }); }
+  catch (error) { next(error); }
+});
+
+router.get('/reviews', allow('FACULTY', 'DEPARTMENT_ADMIN', 'SYSTEM_ADMIN'), (req, res) => {
+  res.json({ submissions: listReviews(req.user) });
+});
+
+router.post('/submissions', (req, res, next) => {
+  try {
+    const submission = submitProjectWork(req.user, req.body);
+    res.status(201).json({ submission });
+  } catch (error) { next(error); }
+});
+
+router.post('/submissions/:id/review', allow('FACULTY', 'DEPARTMENT_ADMIN', 'SYSTEM_ADMIN'), (req, res, next) => {
+  try {
+    res.json(reviewProjectSubmission(req.user, Number(req.params.id), req.body));
+  } catch (error) { next(error); }
+});
+
+export default router;
