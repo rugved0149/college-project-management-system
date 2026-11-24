@@ -17,7 +17,7 @@
 - Audit records for successful account registration/login and administrative changes
 - SQLite schema, indexes, foreign-key constraints and additive category migration
 - Render Blueprint for API/static frontend and persistent API storage
-- All 20 supplied UML diagram exports retained in `docs/diagrams`
+- Supplied UML diagram set reviewed and mapped in `docs/DIAGRAM_TRACEABILITY.md`; original image exports remain in the project reference ZIP and are not yet committed as individual repository assets
 - Diagram-to-implementation matrix in `docs/DIAGRAM_TRACEABILITY.md`
 
 ## Remaining before production
