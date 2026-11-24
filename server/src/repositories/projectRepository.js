@@ -97,3 +97,7 @@ export function setProjectGuide(projectId, guideId) {
 export function listProjectMembers(projectId) {
   return db.prepare('SELECT user_id FROM project_members WHERE project_id = ?').all(projectId);
 }
+
+export function setProjectStatus(projectId, status) {
+  db.prepare('UPDATE projects SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?').run(status, projectId);
+}
