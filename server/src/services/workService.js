@@ -92,7 +92,7 @@ export function submitProjectWork(user, input) {
   if (input.submissionType === 'DELIVERABLE' && project.status !== 'IN_PROGRESS') throw Object.assign(new Error('Deliverables can only be submitted for projects in progress'), { status: 409 });
   const submission = createSubmission({
     projectId: project.project_id, submitterId: user.user_id, submissionType: input.submissionType,
-    filePath: null, originalName: null
+    filePath: input.filePath, originalName: input.originalName
   });
   if (input.submissionType === 'PROPOSAL') setProjectStatus(project.project_id, 'PROPOSAL_SUBMITTED');
   notifyProjectMembers(project.project_id, `A ${input.submissionType.toLowerCase()} was submitted for review.`, user.user_id);
