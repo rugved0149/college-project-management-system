@@ -34,7 +34,7 @@ export function updateMilestone(milestoneId, { title, dueDate, isCompleted }) {
 }
 
 export function listReviewsForUser(user) {
-  const sql = `SELECT s.*, p.title AS project_title, p.guide_id, p.department_id,
+  const sql = `SELECT s.*, p.title AS project_title, p.guide_id, p.department_id, p.status AS project_status,
     u.name AS submitter_name FROM submissions s
     JOIN projects p ON p.project_id = s.project_id
     JOIN users u ON u.user_id = s.submitter_id WHERE s.status = 'PENDING'`;
@@ -69,8 +69,8 @@ export function reviewSubmission({ submission, reviewerId, decision, comments })
       const next = openTasks === 0 && openMilestones === 0 ? 'COMPLETED' : 'IN_PROGRESS';
       db.prepare('UPDATE projects SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?').run(next, submission.project_id);
     } else {
-      db.prepare('UPDATE projects SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?')
-        .run(decision, submission.project_id);
+      db.prepare("UPDATE projects SET status = 'IN_PROGRESS', updated_at = CURRENT_TIMESTAMP WHERE project_id = ?")
+        .run(submission.project_id);
     }
     const owner = db.prepare('SELECT owner_id FROM projects WHERE project_id = ?').get(submission.project_id);
     db.prepare('INSERT INTO notifications(user_id, message) VALUES (?, ?)')
