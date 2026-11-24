@@ -1,11 +1,15 @@
 import {
-  addProjectMember, canManageProject, canViewProject, createProject, findActiveCategory, findProject,
+  addProjectMember, canManageProject, canViewProject, createProject, findActiveCategory, findProject, listActiveCategoriesForDepartment,
   findUserByEmail, getProjectWorkspace, isProjectMember, listProjectsForUser,
   notifyProjectMembers, notifyUser, removeProjectMember, setProjectGuide, setProjectStatus, updateProjectDetails
 } from '../repositories/projectRepository.js';
 
 export function listProjects(user) {
   return listProjectsForUser(user);
+}
+
+export function listCategories(user) {
+  return listActiveCategoriesForDepartment(user.department_id);
 }
 
 export function createUserProject(user, input) {
