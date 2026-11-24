@@ -57,7 +57,7 @@ The seed script creates the initial System Administrator and the default Compute
 ## Deployment
 The repository includes `render.yaml` for a Render static frontend and Node API service. The API service requires its persistent disk for both the SQLite database and uploaded files. Configure:
 - `CLIENT_URL`: deployed static-site origin
-- `VITE_API_URL`: deployed API origin plus `/api` only if the frontend expects it (the current client expects the API base URL ending in `/api`)
+- `VITE_API_URL`: deployed API base URL ending in `/api`, for example `https://campusflow-api.onrender.com/api`
 
 The Blueprint is configuration only; a live deployment has not yet been verified.
 
