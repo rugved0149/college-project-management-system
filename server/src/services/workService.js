@@ -16,7 +16,7 @@ export function addTask(user, input) {
   const project = findProject(input.projectId);
   if (!project) throw Object.assign(new Error('Project not found'), { status: 404 });
   if (!canManageProject(project, user)) throw Object.assign(new Error('Only the project owner, assigned guide or department administrator can create tasks'), { status: 403 });
-  if (!['APPROVED', 'IN_PROGRESS'].includes(project.status)) throw Object.assign(new Error('Tasks can be created after proposal approval'), { status: 409 });
+  if (project.status !== 'IN_PROGRESS') throw Object.assign(new Error('Start the approved project before creating tasks'), { status: 409 });
   if (input.assigneeId && !isProjectMember(project.project_id, input.assigneeId)) throw Object.assign(new Error('The assignee must be a project member'), { status: 400 });
   const task = createTask({
     projectId: project.project_id, title: input.title.trim(), description: input.description || '',
@@ -46,7 +46,7 @@ export function addMilestone(user, input) {
   const project = findProject(input.projectId);
   if (!project) throw Object.assign(new Error('Project not found'), { status: 404 });
   if (!canManageProject(project, user)) throw Object.assign(new Error('You cannot manage milestones for this project'), { status: 403 });
-  if (!['APPROVED', 'IN_PROGRESS'].includes(project.status)) throw Object.assign(new Error('Milestones can be created after proposal approval'), { status: 409 });
+  if (project.status !== 'IN_PROGRESS') throw Object.assign(new Error('Start the approved project before creating milestones'), { status: 409 });
   const milestone = createMilestone({ projectId: project.project_id, title: input.title.trim(), dueDate: input.dueDate || null });
   notifyProjectMembers(project.project_id, `A new milestone was added: ${milestone.title}`, user.user_id);
   return milestone;
@@ -74,7 +74,7 @@ export function assignSubmissionForReview(user, submissionId) {
     (user.role === 'DEPARTMENT_ADMIN' && project.department_id === user.department_id) ||
     (user.role === 'FACULTY' && project.guide_id === user.user_id);
   if (!allowed) throw Object.assign(new Error('You are not authorized to assign this submission for review'), { status: 403 });
-  if (submission.status !== 'PENDING' || submission.submission_type !== 'PROPOSAL') throw Object.assign(new Error('Only pending proposals can be assigned for review'), { status: 409 });
+  if (submission.status !== 'PENDING' || submission.submission_type !== 'PROPOSAL' || project.status !== 'PROPOSAL_SUBMITTED') throw Object.assign(new Error('Only newly submitted proposals can be assigned for review'), { status: 409 });
   setProjectStatus(project.project_id, 'UNDER_REVIEW');
   return { success: true, status: 'UNDER_REVIEW' };
 }
@@ -108,6 +108,8 @@ export function reviewProjectSubmission(user, submissionId, input) {
     (user.role === 'FACULTY' && project.guide_id === user.user_id);
   if (!allowed) throw Object.assign(new Error('Only the assigned faculty guide or an authorized administrator can review this submission'), { status: 403 });
   if (submission.status !== 'PENDING') throw Object.assign(new Error('This submission has already been reviewed'), { status: 409 });
+  if (submission.submission_type === 'PROPOSAL' && project.status !== 'UNDER_REVIEW') throw Object.assign(new Error('Assign the proposal for review before recording a decision'), { status: 409 });
+  if (submission.submission_type === 'DELIVERABLE' && project.status !== 'IN_PROGRESS') throw Object.assign(new Error('The project must be in progress to review a deliverable'), { status: 409 });
   if (!['APPROVED', 'REVISION_REQUIRED', 'REJECTED'].includes(input.decision) || !input.comments?.trim()) throw Object.assign(new Error('A valid decision and feedback are required'), { status: 400 });
   reviewSubmission({ submission, reviewerId: user.user_id, decision: input.decision, comments: input.comments.trim() });
   return { success: true };
