@@ -30,7 +30,7 @@ The class diagram's ProjectStatus enum omits `UNDER_REVIEW` and `REVISION_REQUIR
 - Student registration and sign-in
 - Project creation, category selection, team membership and faculty-guide assignment
 - Project detail workspace with task and milestone management
-- Proposal and final-deliverable uploads (15 MB maximum; PDF, Office documents, images and ZIP)
+- Proposal and final-deliverable uploads (configurable file-size limit (15 MB default); PDF, Office documents, images and ZIP)
 - Faculty review queue, feedback history and authenticated file downloads
 - Notifications, people administration, reports, category/settings/permission controls and audit log
 
