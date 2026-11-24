@@ -1,3 +1,4 @@
+import { db } from '../config/database.js';
 import {
   addProjectMember, canManageProject, canViewProject, createProject, findProject,
   findUserByEmail, getProjectWorkspace, isProjectMember, listProjectsForUser,
@@ -11,7 +12,13 @@ export function listProjects(user) {
 export function createUserProject(user, input) {
   if (user.role !== 'STUDENT') throw Object.assign(new Error('Only students can create projects'), { status: 403 });
   if (!input.title?.trim()) throw Object.assign(new Error('Project title is required'), { status: 400 });
-  return createProject({ title: input.title.trim(), description: input.description?.trim() || '', userId: user.user_id });
+  let categoryId=null;
+  if(input.category_id!==undefined&&input.category_id!==null&&input.category_id!==''){
+    const category=db.prepare('SELECT category_id FROM categories WHERE category_id=? AND is_active=1 AND (department_id=? OR department_id IS NULL)').get(Number(input.category_id),user.department_id);
+    if(!category)throw Object.assign(new Error('Choose an active category from your department'),{status:400});
+    categoryId=category.category_id;
+  }
+  return createProject({ title: input.title.trim(), description: input.description?.trim() || '', userId: user.user_id, categoryId });
 }
 
 export function getProjectForUser(user, projectId) {
