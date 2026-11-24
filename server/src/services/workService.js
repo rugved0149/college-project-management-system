@@ -1,3 +1,4 @@
+import { canAssignProposalForReview, canRecordProposalReview, canSubmitDeliverable, canSubmitProposal } from '../domain/projectLifecycle.js';
 import {
   createMilestone, createSubmission, createTask, findMilestone, findSubmission,
   completeProjectIfReady, findTask, listReviewsForUser, listTasksForUser, reviewSubmission, updateMilestone,
@@ -74,7 +75,7 @@ export function assignSubmissionForReview(user, submissionId) {
     (user.role === 'DEPARTMENT_ADMIN' && project.department_id === user.department_id) ||
     (user.role === 'FACULTY' && project.guide_id === user.user_id);
   if (!allowed) throw Object.assign(new Error('You are not authorized to assign this submission for review'), { status: 403 });
-  if (submission.status !== 'PENDING' || submission.submission_type !== 'PROPOSAL' || project.status !== 'PROPOSAL_SUBMITTED') throw Object.assign(new Error('Only newly submitted proposals can be assigned for review'), { status: 409 });
+  if (submission.status !== 'PENDING' || submission.submission_type !== 'PROPOSAL' || !canAssignProposalForReview(project.status)) throw Object.assign(new Error('Only newly submitted proposals can be assigned for review'), { status: 409 });
   setProjectStatus(project.project_id, 'UNDER_REVIEW');
   return { success: true, status: 'UNDER_REVIEW' };
 }
@@ -88,8 +89,8 @@ export function submitProjectWork(user, input) {
   if (!project) throw Object.assign(new Error('Project not found'), { status: 404 });
   if (!isProjectMember(project.project_id, user.user_id)) throw Object.assign(new Error('Only project members can submit project work'), { status: 403 });
   if (!['PROPOSAL', 'DELIVERABLE'].includes(input.submissionType)) throw Object.assign(new Error('Invalid submission type'), { status: 400 });
-  if (input.submissionType === 'PROPOSAL' && !['DRAFT', 'REVISION_REQUIRED'].includes(project.status)) throw Object.assign(new Error('A proposal can only be submitted for a draft or revision-required project'), { status: 409 });
-  if (input.submissionType === 'DELIVERABLE' && project.status !== 'IN_PROGRESS') throw Object.assign(new Error('Deliverables can only be submitted for projects in progress'), { status: 409 });
+  if (input.submissionType === 'PROPOSAL' && !canSubmitProposal(project.status)) throw Object.assign(new Error('A proposal can only be submitted for a draft or revision-required project'), { status: 409 });
+  if (input.submissionType === 'DELIVERABLE' && !canSubmitDeliverable(project.status)) throw Object.assign(new Error('Deliverables can only be submitted for projects in progress'), { status: 409 });
   const submission = createSubmission({
     projectId: project.project_id, submitterId: user.user_id, submissionType: input.submissionType,
     filePath: input.filePath, originalName: input.originalName
@@ -108,8 +109,8 @@ export function reviewProjectSubmission(user, submissionId, input) {
     (user.role === 'FACULTY' && project.guide_id === user.user_id);
   if (!allowed) throw Object.assign(new Error('Only the assigned faculty guide or an authorized administrator can review this submission'), { status: 403 });
   if (submission.status !== 'PENDING') throw Object.assign(new Error('This submission has already been reviewed'), { status: 409 });
-  if (submission.submission_type === 'PROPOSAL' && project.status !== 'UNDER_REVIEW') throw Object.assign(new Error('Assign the proposal for review before recording a decision'), { status: 409 });
-  if (submission.submission_type === 'DELIVERABLE' && project.status !== 'IN_PROGRESS') throw Object.assign(new Error('The project must be in progress to review a deliverable'), { status: 409 });
+  if (submission.submission_type === 'PROPOSAL' && !canRecordProposalReview(project.status)) throw Object.assign(new Error('Assign the proposal for review before recording a decision'), { status: 409 });
+  if (submission.submission_type === 'DELIVERABLE' && !canSubmitDeliverable(project.status)) throw Object.assign(new Error('The project must be in progress to review a deliverable'), { status: 409 });
   if (!['APPROVED', 'REVISION_REQUIRED', 'REJECTED'].includes(input.decision) || !input.comments?.trim()) throw Object.assign(new Error('A valid decision and feedback are required'), { status: 400 });
   reviewSubmission({ submission, reviewerId: user.user_id, decision: input.decision, comments: input.comments.trim() });
   return { success: true };
