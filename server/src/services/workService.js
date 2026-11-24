@@ -1,6 +1,6 @@
 import {
   createMilestone, createSubmission, createTask, findMilestone, findSubmission,
-  findTask, listReviewsForUser, listTasksForUser, reviewSubmission, updateMilestone,
+  completeProjectIfReady, findTask, listReviewsForUser, listTasksForUser, reviewSubmission, updateMilestone,
   updateTask
 } from '../repositories/workRepository.js';
 import {
@@ -31,13 +31,14 @@ export function changeTask(user, taskId, input) {
   if (!task) throw Object.assign(new Error('Task not found'), { status: 404 });
   const project = findProject(task.project_id);
   const manager = canManageProject(project, user);
-  const assigned = task.assignee_id === user.user_id || isProjectMember(project.project_id, user.user_id);
+  const assigned = task.assignee_id === user.user_id;
   if (!manager && !assigned) throw Object.assign(new Error('You cannot update this task'), { status: 403 });
   if (!manager && (input.assigneeId !== undefined || input.dueDate !== undefined)) throw Object.assign(new Error('Only project managers can reassign tasks or change due dates'), { status: 403 });
   if (input.status && !['TODO', 'IN_PROGRESS', 'COMPLETED'].includes(input.status)) throw Object.assign(new Error('Invalid task status'), { status: 400 });
   const updated = updateTask(taskId, {
     status: input.status || null, assigneeId: input.assigneeId ?? null, dueDate: input.dueDate ?? null
   });
+  completeProjectIfReady(project.project_id);
   return updated;
 }
 
@@ -57,10 +58,25 @@ export function changeMilestone(user, milestoneId, input) {
   const project = findProject(milestone.project_id);
   if (!canManageProject(project, user)) throw Object.assign(new Error('You cannot update this milestone'), { status: 403 });
   if (input.isCompleted !== undefined && ![true, false, 0, 1].includes(input.isCompleted)) throw Object.assign(new Error('Invalid milestone completion value'), { status: 400 });
-  return updateMilestone(milestoneId, {
+  const updated = updateMilestone(milestoneId, {
     title: input.title ?? null, dueDate: input.dueDate ?? null,
     isCompleted: input.isCompleted === undefined ? null : Number(Boolean(input.isCompleted))
   });
+  completeProjectIfReady(project.project_id);
+  return updated;
+}
+
+export function assignSubmissionForReview(user, submissionId) {
+  const submission = findSubmission(submissionId);
+  if (!submission) throw Object.assign(new Error('Submission not found'), { status: 404 });
+  const project = findProject(submission.project_id);
+  const allowed = user.role === 'SYSTEM_ADMIN' ||
+    (user.role === 'DEPARTMENT_ADMIN' && project.department_id === user.department_id) ||
+    (user.role === 'FACULTY' && project.guide_id === user.user_id);
+  if (!allowed) throw Object.assign(new Error('You are not authorized to assign this submission for review'), { status: 403 });
+  if (submission.status !== 'PENDING' || submission.submission_type !== 'PROPOSAL') throw Object.assign(new Error('Only pending proposals can be assigned for review'), { status: 409 });
+  setProjectStatus(project.project_id, 'UNDER_REVIEW');
+  return { success: true, status: 'UNDER_REVIEW' };
 }
 
 export function listReviews(user) {
