@@ -28,7 +28,9 @@ export const submissionUpload = multer({
   fileFilter: (req, file, callback) => {
     const extension = path.extname(file.originalname).toLowerCase();
     if (!allowed.has(extension) || !mimeTypes.has(file.mimetype)) {
-      return callback(new Error('Unsupported file type. Upload PDF, Office documents, images or ZIP files.'));
+      const error = new Error('Unsupported file type. Upload PDF, Office documents, images or ZIP files.');
+      error.status = 400;
+      return callback(error);
     }
     callback(null, true);
   }
