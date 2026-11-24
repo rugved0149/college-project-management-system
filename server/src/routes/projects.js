@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { recordAudit } from '../services/auditService.js';
 import {
   addMember, assignGuide, createUserProject, editProject, getProjectForUser,
   listCategories, listProjects, removeMember, startProject
@@ -14,6 +15,7 @@ router.get('/categories',(req,res)=>res.json({categories:listCategories(req.user
 router.post('/', (req, res, next) => {
   try {
     const project = createUserProject(req.user, req.body);
+    recordAudit(req.user, req, 'PROJECT_CREATED', 'PROJECT', project.project_id, { title: project.title });
     res.status(201).json({ project });
   } catch (error) { next(error); }
 });
@@ -24,18 +26,19 @@ router.get('/:id', (req, res, next) => {
 });
 
 router.post('/:id/start', (req, res, next) => {
-  try { res.json(startProject(req.user, Number(req.params.id))); }
+  try { const result = startProject(req.user, Number(req.params.id)); recordAudit(req.user, req, 'PROJECT_STARTED', 'PROJECT', req.params.id); res.json(result); }
   catch (error) { next(error); }
 });
 
 router.patch('/:id', (req, res, next) => {
-  try { res.json({ project: editProject(req.user, Number(req.params.id), req.body) }); }
+  try { const project = editProject(req.user, Number(req.params.id), req.body); recordAudit(req.user, req, 'PROJECT_UPDATED', 'PROJECT', req.params.id, { title: project.title }); res.json({ project }); }
   catch (error) { next(error); }
 });
 
 router.post('/:id/members', (req, res, next) => {
   try {
     const member = addMember(req.user, Number(req.params.id), req.body.email);
+    recordAudit(req.user, req, 'PROJECT_MEMBER_ADDED', 'PROJECT', req.params.id, { member_user_id: member.user_id });
     res.status(201).json({ member });
   } catch (error) { next(error); }
 });
@@ -43,12 +46,13 @@ router.post('/:id/members', (req, res, next) => {
 router.delete('/:id/members/:memberId', (req, res, next) => {
   try {
     removeMember(req.user, Number(req.params.id), Number(req.params.memberId));
+    recordAudit(req.user, req, 'PROJECT_MEMBER_REMOVED', 'PROJECT', req.params.id, { member_user_id: Number(req.params.memberId) });
     res.json({ success: true });
   } catch (error) { next(error); }
 });
 
 router.put('/:id/guide', (req, res, next) => {
-  try { res.json({ guide: assignGuide(req.user, Number(req.params.id), req.body.email) }); }
+  try { const guide = assignGuide(req.user, Number(req.params.id), req.body.email); recordAudit(req.user, req, 'PROJECT_GUIDE_ASSIGNED', 'PROJECT', req.params.id, { guide_user_id: guide.user_id }); res.json({ guide }); }
   catch (error) { next(error); }
 });
 
