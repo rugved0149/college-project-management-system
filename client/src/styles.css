@@ -82,3 +82,10 @@
 .feedback-row b{font-size:10px;color:#3d526d}
 .feedback-row p{font-size:11px;color:#5f6e81;line-height:1.6;margin:7px 0}
 .feedback-row small{font-size:9px;color:#929dac}
+
+.login-panel select{display:block;width:100%;margin-top:7px;border:1px solid #dfe5ec;border-radius:7px;padding:12px;font-size:12px;outline:0;background:#fff;color:#273449}
+.login-panel select:focus{border-color:#6b91bc;box-shadow:0 0 0 3px #e9f1fa}
+.detail-meta{font-size:10px!important;color:#8290a1!important;margin-top:-4px!important}
+.status.under-review,.status.revision-required{background:#fff5e6;color:#9a6b22}
+.status.approved{background:#e9f6ef;color:#347b53}
+.status.rejected{background:#fff0ee;color:#a63e34}
