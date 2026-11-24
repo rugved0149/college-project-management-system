@@ -11,7 +11,8 @@
 - Project list, create, category selection and access-controlled project detail
 - Team membership management and faculty-guide assignment
 - Task and milestone creation, assignment, progress updates and due dates
-- Proposal and final-deliverable file upload to private server storage
+- Proposal and final-deliverable file upload to private server storage with extension/MIME allowlists and file-signature verification
+- Optional ClamAV INSTREAM malware scanning; can be configured to fail closed when scanning is required
 - Authenticated submission downloads and faculty feedback history
 - Proposal review assignment, approve/revision/reject decisions and lifecycle transitions
 - Explicit start action for approved projects
@@ -23,7 +24,7 @@
 - Shared audit service covering project creation/updates/start, team membership, guide assignment, task and milestone changes, submissions, review assignment/decisions and authenticated file downloads
 - SQLite schema with foreign keys, indexes and additive category migration
 - Layered modular-monolith structure: routes, services, repositories, domain enums/lifecycle rules, middleware and database connection
-- Unit tests for proposal/review/start/completion state rules and cryptographic authentication-token generation
+- Unit tests for proposal/review/start/completion state rules, cryptographic authentication-token generation and upload signature/scanner policy
 - Authentication API integration tests for verified/unverified sign-in, one-time email verification, password reset and JWT session revocation
 - GitHub Actions frontend build, backend unit/integration tests and server syntax checks pass
 - Render Blueprint with static frontend, API service and persistent storage
@@ -34,7 +35,7 @@
 - Add browser-level end-to-end tests for all four roles
 - Extend authorization tests for cross-department and non-member access
 - Add audit coverage for remaining read/export operations where a compliance requirement exists
-- Add file content sniffing and malware scanning
+
 - Add a department deactivation policy (departments are currently renamed rather than deleted to preserve references)
 - Move remaining authentication and administration SQL from route handlers into repository/service modules
 - Validate SQLite backup/restore and persistent-disk behavior
