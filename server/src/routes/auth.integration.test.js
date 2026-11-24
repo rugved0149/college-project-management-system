@@ -134,7 +134,7 @@ test('project visibility is restricted to members, assigned faculty and departme
   const createUser = (name, email, role, deptId) => db.prepare(
     'INSERT INTO users(name,email,password_hash,role,department_id,email_verified) VALUES(?,?,?,?,?,1)'
   ).run(name, email, bcrypt.hashSync(password, 4), role, deptId).lastInsertRowid;
-  const ownerToken = (await (await login()).json()).token;
+  const ownerToken = (await (await login(userEmail, 'UpdatedPass456')).json()).token;
   const projectResponse = await fetch(baseUrl + '/api/projects', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: 'Bearer ' + ownerToken },
