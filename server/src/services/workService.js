@@ -112,3 +112,12 @@ export function reviewProjectSubmission(user, submissionId, input) {
   reviewSubmission({ submission, reviewerId: user.user_id, decision: input.decision, comments: input.comments.trim() });
   return { success: true };
 }
+
+export function getSubmissionFile(user, submissionId) {
+  const submission = findSubmission(submissionId);
+  if (!submission) throw Object.assign(new Error('Submission not found'), { status: 404 });
+  const project = findProject(submission.project_id);
+  if (!canViewProject(project, user)) throw Object.assign(new Error('You cannot access this submission'), { status: 403 });
+  if (!submission.file_path) throw Object.assign(new Error('No file is attached to this submission'), { status: 404 });
+  return { fileName: submission.file_path, originalName: submission.original_name || 'submission' };
+}
