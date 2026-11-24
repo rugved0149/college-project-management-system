@@ -21,7 +21,7 @@ function issueToken(userId, purpose, hours) {
     .run(userId, purpose, generated.hash, new Date(Date.now() + hours * 60 * 60 * 1000).toISOString());
   return generated.token;
 }
-function validEmail(email) { return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email); }
+function validEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
 r.get('/departments', (q, s) => s.json({ departments: db.prepare('SELECT department_id, name AS department_name FROM departments ORDER BY name').all() }));
 
