@@ -23,7 +23,7 @@ This matrix tracks the supplied QPP diagram set against the current CampusFlow i
 | Composite structure | Internal collaboration of a subsystem | Service/repository decomposition and middleware composition | Partial |
 | Architecture | Overall system organization | Layered modular monolith: presentation, API/routes, services, repositories/data access, SQLite | Implemented core architecture |
 | Deployment | Runtime nodes and deployment mapping | Render web services, static frontend, API service and persistent storage configuration | Configuration present; deployment not yet verified |
-| Profile | Domain-specific UML stereotypes and constraints | Application roles, workflow states, role permissions and validation constraints | Partial |
+| Profile | Domain-specific stereotypes for Entity, Service, API and Repository | Relational schema entities, domain lifecycle module, Express routes/services and repository modules | Implemented structure |
 
 ## Important reconciliation notes
 
