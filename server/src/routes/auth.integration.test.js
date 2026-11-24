@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import bcrypt from 'bcryptjs';
 
 process.env.DB_PATH = join(mkdtempSync(join(tmpdir(), 'campusflow-auth-')), 'test.db');
@@ -34,7 +34,7 @@ before(async () => {
 after(async () => {
   if (server) await new Promise(resolve => server.close(resolve));
   if (db) db.close();
-  rmSync(process.env.DB_PATH.replace(/test\\.db$/, ''), { recursive: true, force: true });
+  rmSync(dirname(process.env.DB_PATH), { recursive: true, force: true });
 });
 
 async function login(email = userEmail, pass = password) {
