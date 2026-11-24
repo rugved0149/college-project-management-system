@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 process.env.DB_PATH = join(mkdtempSync(join(tmpdir(), 'campusflow-auth-')), 'test.db');
 process.env.JWT_SECRET = 'integration-test-secret-at-least-32-characters';
@@ -127,4 +128,50 @@ test('password reset consumes its token and revokes existing JWT sessions', asyn
     body: JSON.stringify({ token: token.token, password: 'AnotherPass789' })
   });
   assert.equal(replay.status, 400);
+});
+
+
+test('project visibility is restricted to members, assigned faculty and department administrators', async () => {
+  const tokenFor = userId => jwt.sign({ user_id: userId, session_version: 0 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const createUser = (name, email, role, deptId) => db.prepare(
+    'INSERT INTO users(name,email,password_hash,role,department_id,email_verified) VALUES(?,?,?,?,?,1)'
+  ).run(name, email, bcrypt.hashSync(password, 4), role, deptId).lastInsertRowid;
+  const ownerToken = tokenFor(userId);
+  const projectResponse = await fetch(baseUrl + '/api/projects', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + ownerToken },
+    body: JSON.stringify({ title: 'Access Control Project', description: 'Integration test project' })
+  });
+  assert.equal(projectResponse.status, 201);
+  const project = (await projectResponse.json()).project;
+
+  const outsiderId = createUser('Same Department Outsider', 'outsider@example.edu', 'STUDENT', departmentId);
+  const outsiderToken = tokenFor(outsiderId);
+  assert.equal((await fetch(baseUrl + '/api/projects/' + project.project_id, {
+    headers: { authorization: 'Bearer ' + outsiderToken }
+  })).status, 403);
+
+  const memberResponse = await fetch(baseUrl + '/api/projects/' + project.project_id + '/members', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + ownerToken },
+    body: JSON.stringify({ email: 'outsider@example.edu' })
+  });
+  assert.equal(memberResponse.status, 201);
+  assert.equal((await fetch(baseUrl + '/api/projects/' + project.project_id, {
+    headers: { authorization: 'Bearer ' + outsiderToken }
+  })).status, 200);
+
+  const secondDepartmentId = db.prepare('INSERT INTO departments(name) VALUES(?)').run('Other Integration Department').lastInsertRowid;
+  const otherAdminId = createUser('Other Department Admin', 'other-admin@example.edu', 'DEPARTMENT_ADMIN', secondDepartmentId);
+  const otherAdminToken = tokenFor(otherAdminId);
+  assert.equal((await fetch(baseUrl + '/api/projects/' + project.project_id, {
+    headers: { authorization: 'Bearer ' + otherAdminToken }
+  })).status, 403);
+  const people = await fetch(baseUrl + '/api/admin/users', {
+    headers: { authorization: 'Bearer ' + otherAdminToken }
+  });
+  assert.equal(people.status, 200);
+  const listedUsers = (await people.json()).users;
+  assert.ok(listedUsers.every(user => user.department_id === secondDepartmentId));
+  assert.ok(!listedUsers.some(user => user.user_id === userId));
 });
