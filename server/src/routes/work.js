@@ -1,8 +1,11 @@
 import { Router } from 'express';
+import path from 'node:path';
+import fs from 'node:fs';
 import { auth, allow } from '../middleware/auth.js';
+import { submissionUpload } from '../middleware/upload.js';
 import {
   addMilestone, addTask, assignSubmissionForReview, changeMilestone, changeTask, listReviews, listTasks,
-  reviewProjectSubmission, submitProjectWork
+  getSubmissionFile, reviewProjectSubmission, submitProjectWork
 } from '../services/workService.js';
 
 const router = Router();
@@ -40,10 +43,24 @@ router.get('/reviews', allow('FACULTY', 'DEPARTMENT_ADMIN', 'SYSTEM_ADMIN'), (re
   res.json({ submissions: listReviews(req.user) });
 });
 
-router.post('/submissions', (req, res, next) => {
+router.post('/submissions', submissionUpload.single('file'), (req, res, next) => {
   try {
-    const submission = submitProjectWork(req.user, req.body);
+    if (!req.file) return res.status(400).json({ error: 'Attach a proposal or deliverable file before submitting' });
+    const submission = submitProjectWork(req.user, { ...req.body, filePath: req.file.filename, originalName: req.file.originalname });
     res.status(201).json({ submission });
+  } catch (error) {
+    if (req.file) fs.unlink(req.file.path, () => {});
+    next(error);
+  }
+});
+
+router.get('/submissions/:id/file', (req, res, next) => {
+  try {
+    const file = getSubmissionFile(req.user, Number(req.params.id));
+    const uploadRoot = path.resolve(process.env.UPLOAD_DIR || './storage/uploads');
+    const filePath = path.resolve(uploadRoot, path.basename(file.fileName));
+    if (!filePath.startsWith(uploadRoot + path.sep) || !fs.existsSync(filePath)) return res.status(404).json({ error: 'Submission file not found' });
+    res.download(filePath, path.basename(file.originalName));
   } catch (error) { next(error); }
 });
 
