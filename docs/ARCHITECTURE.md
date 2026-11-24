@@ -31,7 +31,7 @@ Proposal submission moves a project to PROPOSAL_SUBMITTED. An authorized guide/a
 A deliverable revision or rejection leaves the project IN_PROGRESS so a corrected deliverable can be submitted. Proposal revision/rejection changes the project-level proposal state.
 
 ## File handling
-Uploads are stored outside the public static directory using generated server-side filenames. The API validates extension/MIME metadata and enforces a 15 MB limit. SQLite stores the generated filename and original display name, not file contents. Downloads require authentication and project access checks.
+Uploads are stored outside the public static directory using generated server-side filenames. The API validates extension/MIME metadata and enforces the configured system upload limit (15 MB by default, adjustable from 1–100 MB). SQLite stores the generated filename and original display name, not file contents. Downloads require authentication and project access checks.
 
 ## API conventions
 REST API prefix: `/api`. Authentication uses bearer JWTs. JSON is used for metadata; multipart/form-data is used for submission uploads. Health endpoint: `GET /api/health`.
