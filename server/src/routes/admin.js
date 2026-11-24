@@ -120,7 +120,7 @@ r.put('/settings',(q,s)=>{
 });
 r.get('/permissions',(q,s)=>{
   if(!isSystem(q))return fail(s,403,'Only system administrators can manage permissions');
-  s.json({permissions:db.prepare('SELECT role,permission,allowed,updated_at FROM role_permissions WHERE permission='categories.manage' ORDER BY role').all()});
+  s.json({permissions:db.prepare("SELECT role,permission,allowed,updated_at FROM role_permissions WHERE permission='categories.manage' ORDER BY role").all()});
 });
 r.put('/permissions',(q,s)=>{
   if(!isSystem(q))return fail(s,403,'Only system administrators can manage permissions');
