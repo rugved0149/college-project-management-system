@@ -33,7 +33,7 @@ export function initializeDatabase(){
   const defaults=[
     ['STUDENT','project.create',1],['STUDENT','project.submit',1],['STUDENT','task.update',1],
     ['FACULTY','project.review',1],['FACULTY','task.manage',1],['FACULTY','feedback.create',1],
-    ['DEPARTMENT_ADMIN','department.manage',1],['DEPARTMENT_ADMIN','reports.view',1],
+    ['DEPARTMENT_ADMIN','department.manage',1],['DEPARTMENT_ADMIN','categories.manage',1],['DEPARTMENT_ADMIN','users.manage',1],['DEPARTMENT_ADMIN','reports.view',1],
     ['SYSTEM_ADMIN','system.configure',1],['SYSTEM_ADMIN','permissions.manage',1],['SYSTEM_ADMIN','audit.view',1]
   ];
   const insert=db.prepare('INSERT OR IGNORE INTO role_permissions(role,permission,allowed) VALUES(?,?,?)');
