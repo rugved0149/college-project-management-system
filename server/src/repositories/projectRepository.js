@@ -1,9 +1,9 @@
 import { db } from '../config/database.js';
 
 export function listProjectsForUser(user) {
-  const base = `SELECT p.*, u.name AS owner_name,
+  const base = `SELECT p.*, c.name AS category_name, u.name AS owner_name,
     (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.project_id) AS member_count
-    FROM projects p JOIN users u ON u.user_id = p.owner_id`;
+    FROM projects p JOIN users u ON u.user_id = p.owner_id LEFT JOIN categories c ON c.category_id = p.category_id`;
   if (user.role === 'SYSTEM_ADMIN') return db.prepare(`${base} ORDER BY p.updated_at DESC`).all();
   if (user.role === 'DEPARTMENT_ADMIN') return db.prepare(`${base} WHERE p.department_id = ? ORDER BY p.updated_at DESC`).all(user.department_id);
   if (user.role === 'FACULTY') return db.prepare(`${base} WHERE p.guide_id = ? ORDER BY p.updated_at DESC`).all(user.user_id);
@@ -13,7 +13,7 @@ export function listProjectsForUser(user) {
 }
 
 export function findProject(projectId) {
-  return db.prepare('SELECT * FROM projects WHERE project_id = ?').get(projectId);
+  return db.prepare('SELECT p.*, c.name AS category_name FROM projects p LEFT JOIN categories c ON c.category_id=p.category_id WHERE p.project_id = ?').get(projectId);
 }
 
 export function isProjectMember(projectId, userId) {
@@ -51,10 +51,10 @@ export function getProjectWorkspace(projectId) {
   return { project, members, tasks, milestones, submissions };
 }
 
-export function createProject({ title, description, userId }) {
-  const result = db.prepare(`INSERT INTO projects(title, description, owner_id, department_id)
-    VALUES (?, ?, ?, (SELECT department_id FROM users WHERE user_id = ?))`)
-    .run(title, description, userId, userId);
+export function createProject({ title, description, userId, categoryId = null }) {
+  const result = db.prepare(`INSERT INTO projects(title, description, owner_id, department_id, category_id)
+    VALUES (?, ?, ?, (SELECT department_id FROM users WHERE user_id = ?), ?)`)
+    .run(title, description, userId, userId, categoryId);
   db.prepare('INSERT INTO project_members(project_id, user_id) VALUES (?, ?)').run(result.lastInsertRowid, userId);
   return findProject(result.lastInsertRowid);
 }
