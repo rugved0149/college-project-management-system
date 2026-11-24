@@ -1,6 +1,9 @@
 import { db } from '../config/database.js';
 
 export function listTasksForUser(user) {
+  const adminSql = 'SELECT t.*, p.title AS project_title FROM tasks t JOIN projects p ON p.project_id = t.project_id';
+  if (user.role === 'SYSTEM_ADMIN') return db.prepare(adminSql + ' ORDER BY t.due_date').all();
+  if (user.role === 'DEPARTMENT_ADMIN') return db.prepare(adminSql + ' WHERE p.department_id = ? ORDER BY t.due_date').all(user.department_id);
   return db.prepare(`SELECT t.*, p.title AS project_title
     FROM tasks t JOIN projects p ON p.project_id = t.project_id
     WHERE p.owner_id = ? OR p.guide_id = ? OR EXISTS (
