@@ -19,6 +19,14 @@ services:
         value: /opt/render/project/src/server/storage/college_projects.db
       - key: CLIENT_URL
         sync: false
+      - key: APP_URL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: CampusFlow
   - type: web
     name: campusflow-client
     runtime: static
