@@ -60,7 +60,7 @@ export async function scanWithClamAV(filePath) {
     });
     socket.on('connect', async () => {
       try {
-        await write(socket, Buffer.from('zINSTREAM\\0'));
+        await write(socket, Buffer.from('zINSTREAM\0'));
         for await (const chunk of createReadStream(filePath)) {
           const header = Buffer.alloc(4);
           header.writeUInt32BE(chunk.length, 0);
