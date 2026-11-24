@@ -95,12 +95,12 @@ r.put('/settings',(q,s)=>{
 });
 r.get('/permissions',(q,s)=>{
   if(!isSystem(q))return fail(s,403,'Only system administrators can manage permissions');
-  s.json({permissions:db.prepare('SELECT role,permission,allowed,updated_at FROM role_permissions ORDER BY role,permission').all()});
+  s.json({permissions:db.prepare('SELECT role,permission,allowed,updated_at FROM role_permissions WHERE permission='categories.manage' ORDER BY role').all()});
 });
 r.put('/permissions',(q,s)=>{
   if(!isSystem(q))return fail(s,403,'Only system administrators can manage permissions');
   const {role,permission,allowed}=q.body||{};
-  if(!roles.includes(role)||typeof permission!=='string'||!permission.trim()||permission.length>100||typeof allowed!=='boolean')return fail(s,400,'Invalid permission update');
+  if(!roles.includes(role)||permission!=='categories.manage'||typeof allowed!=='boolean')return fail(s,400,'Only the categories.manage capability is currently configurable');
   db.prepare('INSERT INTO role_permissions(role,permission,allowed,updated_by,updated_at) VALUES(?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(role,permission) DO UPDATE SET allowed=excluded.allowed,updated_by=excluded.updated_by,updated_at=CURRENT_TIMESTAMP').run(role,permission.trim(),allowed?1:0,q.user.user_id);
   audit(q,'PERMISSION_UPDATED','ROLE_PERMISSION',role+':'+permission,{allowed});
   s.json({success:true});
