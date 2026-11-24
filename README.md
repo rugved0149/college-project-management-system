@@ -27,7 +27,8 @@ The proposal must be assigned for review before a decision is recorded. An appro
 The class diagram's ProjectStatus enum omits `UNDER_REVIEW` and `REVISION_REQUIRED`; these states are retained because they are explicit in the state-machine diagram.
 
 ## Main workflows
-- Student registration, sign-in and profile management
+- Student registration, email verification, sign-in and profile management
+- Single-use password-reset links with one-hour expiry and session revocation after reset
 - Project creation, category selection, team membership and faculty-guide assignment
 - Project detail workspace with task and milestone management
 - Proposal and final-deliverable uploads (configurable file-size limit (15 MB default); PDF, Office documents, images and ZIP)
@@ -52,10 +53,14 @@ npm run dev
 - Frontend: http://localhost:5173
 - API health: http://localhost:5000/api/health
 
-The seed script creates the initial System Administrator and the default Computer Engineering department. Registration creates Student accounts; faculty and administrator roles are assigned by authorized administrators.
+The seed script creates the initial System Administrator and the default Computer Engineering department. Existing accounts remain verified during migration; new student registrations must verify their email before sign-in. Registration creates Student accounts; faculty and administrator roles are assigned by authorized administrators.
 
 ## Deployment
-The repository includes `render.yaml` for a Render static frontend and Node API service. The API service requires its persistent disk for both the SQLite database and uploaded files. Configure:
+The repository includes `render.yaml` for a Render static frontend and Node API service. The API service requires its persistent disk for both the SQLite database and uploaded files. Configure these environment variables in Render; email verification and password recovery require a verified Brevo sender:
+- `BREVO_API_KEY`: Brevo API key
+- `EMAIL_FROM`: verified sender email address in Brevo
+- `EMAIL_FROM_NAME`: sender display name
+- `APP_URL`: deployed frontend URL
 - `CLIENT_URL`: deployed static-site origin
 - `VITE_API_URL`: deployed API base URL ending in `/api`, for example `https://campusflow-api.onrender.com/api`
 
