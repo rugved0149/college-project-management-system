@@ -27,7 +27,7 @@ The proposal must be assigned for review before a decision is recorded. An appro
 The class diagram's ProjectStatus enum omits `UNDER_REVIEW` and `REVISION_REQUIRED`; these states are retained because they are explicit in the state-machine diagram.
 
 ## Main workflows
-- Student registration and sign-in
+- Student registration, sign-in and profile management
 - Project creation, category selection, team membership and faculty-guide assignment
 - Project detail workspace with task and milestone management
 - Proposal and final-deliverable uploads (configurable file-size limit (15 MB default); PDF, Office documents, images and ZIP)
