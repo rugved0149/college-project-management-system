@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import {db} from '../config/database.js';
-import {auth,allow} from '../middleware/auth.js';
+import {auth,allow,allowPermission} from '../middleware/auth.js';
 
 const r=Router();
 r.use(auth,allow('DEPARTMENT_ADMIN','SYSTEM_ADMIN'));
@@ -48,12 +48,12 @@ r.get('/reports',(q,s)=>{
   s.json({summary:{totalProjects:total,totalUsers:db.prepare(`SELECT COUNT(*) n FROM users WHERE ${isSystem(q)?'1=1':'department_id=?'}`).get(...args).n,completed,completionRate:total?Math.round(completed/total*100):0},byStatus:db.prepare(`SELECT status,COUNT(*) count FROM projects WHERE ${where} GROUP BY status`).all(...args),recent:db.prepare(`SELECT p.*,u.name owner_name FROM projects p JOIN users u ON u.user_id=p.owner_id WHERE ${isSystem(q)?'1=1':'p.department_id=?'} ORDER BY p.updated_at DESC LIMIT 8`).all(...args)});
 });
 
-r.get('/categories',(q,s)=>{
+r.get('/categories',allowPermission('categories.manage','DEPARTMENT_ADMIN','SYSTEM_ADMIN'),(q,s)=>{
   const filter=scope(q,'');
   const rows=db.prepare(`SELECT c.*,d.name department_name FROM categories c LEFT JOIN departments d ON d.department_id=c.department_id WHERE ${isSystem(q)?'1=1':'c.department_id=?'} ORDER BY c.name`).all(...(isSystem(q)?[]:[q.user.department_id]));
   s.json({categories:rows});
 });
-r.post('/categories',(q,s)=>{
+r.post('/categories',allowPermission('categories.manage','DEPARTMENT_ADMIN','SYSTEM_ADMIN'),(q,s)=>{
   const name=String(q.body.name||'').trim();
   if(!name||name.length>80)return fail(s,400,'Category name must contain 1–80 characters');
   const departmentId=isSystem(q)?(q.body.department_id||null):q.user.department_id;
@@ -63,7 +63,7 @@ r.post('/categories',(q,s)=>{
     s.status(201).json({category:db.prepare('SELECT * FROM categories WHERE category_id=?').get(info.lastInsertRowid)});
   }catch(e){if(String(e.message).includes('UNIQUE'))return fail(s,409,'That category already exists in this department');throw e;}
 });
-r.patch('/categories/:id',(q,s)=>{
+r.patch('/categories/:id',allowPermission('categories.manage','DEPARTMENT_ADMIN','SYSTEM_ADMIN'),(q,s)=>{
   const category=db.prepare('SELECT * FROM categories WHERE category_id=?').get(q.params.id);
   if(!category)return fail(s,404,'Category not found');
   if(!isSystem(q)&&category.department_id!==q.user.department_id)return fail(s,403,'Category belongs to another department');
