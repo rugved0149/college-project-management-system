@@ -14,10 +14,12 @@
 - Explicit start action for approved projects
 - Completion guard: approved final deliverable plus all tasks and milestones completed
 - Notifications for account, team, project and review events
-- Department-scoped people administration, category management and reports
+- Department-scoped people administration, department/category management and reports
+- Student profile management
 - System settings, role-permission records and audit-log console
 - SQLite schema with foreign keys, indexes and additive category migration
-- Layered modular-monolith structure: routes, services, repositories, middleware and database connection
+- Layered modular-monolith structure: routes, services, repositories, domain enums/lifecycle rules, middleware and database connection
+- Unit tests for proposal/review/start/completion state rules
 - Render Blueprint with static frontend, API service and persistent storage
 - UML traceability matrix for all 20 supplied diagram exports
 
