@@ -7,8 +7,9 @@ CampusFlow is a **layered modular monolith** deployed as a three-tier system: br
 1. **Presentation:** React + Vite pages and reusable components.
 2. **API:** Express REST routes, authentication and upload middleware.
 3. **Business logic:** project lifecycle, team, task, milestone, submission, review and administration services.
-4. **Data access:** repositories that encapsulate SQLite queries and persistence operations.
-5. **Database:** one SQLite file on the API service's persistent disk.
+4. **Domain:** role/workflow enums and lifecycle rules shared by business services.
+5. **Data access:** repositories that encapsulate SQLite queries and persistence operations.
+6. **Database:** one SQLite file on the API service's persistent disk.
 
 Routes should validate HTTP input and delegate domain decisions to services. Services enforce role, department, membership and lifecycle rules. Repositories own SQL statements. The frontend communicates only through REST; it never opens the SQLite file.
 
