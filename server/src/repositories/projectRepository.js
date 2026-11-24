@@ -13,7 +13,7 @@ export function listProjectsForUser(user) {
 }
 
 export function findProject(projectId) {
-  return db.prepare('SELECT p.*, c.name AS category_name FROM projects p LEFT JOIN categories c ON c.category_id=p.category_id WHERE p.project_id = ?').get(projectId);
+  return db.prepare('SELECT p.*, c.name AS category_name, g.name AS guide_name FROM projects p LEFT JOIN categories c ON c.category_id=p.category_id LEFT JOIN users g ON g.user_id=p.guide_id WHERE p.project_id = ?').get(projectId);
 }
 
 export function isProjectMember(projectId, userId) {
