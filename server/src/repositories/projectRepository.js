@@ -101,3 +101,8 @@ export function listProjectMembers(projectId) {
 export function setProjectStatus(projectId, status) {
   db.prepare('UPDATE projects SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?').run(status, projectId);
 }
+
+export function findActiveCategory(categoryId, departmentId) {
+  return db.prepare('SELECT category_id FROM categories WHERE category_id = ? AND is_active = 1 AND (department_id = ? OR department_id IS NULL)')
+    .get(categoryId, departmentId);
+}
