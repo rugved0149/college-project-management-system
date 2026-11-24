@@ -30,7 +30,8 @@
 - Extend authorization tests for cross-department and non-member access
 - Add file content sniffing and malware scanning
 - Add password reset and email verification
-- Complete department CRUD and any missing system-administration use cases
+- Add a department deactivation policy (departments are currently renamed rather than deleted to preserve references)
+- Move remaining authentication and administration SQL from route handlers into repository/service modules
 - Validate SQLite backup/restore and persistent-disk behavior
 - Deploy to Render and verify CORS, build-time API URL, uploads and database persistence
 - Conduct a security review of authentication, authorization, upload handling, rate limits and error handling
