@@ -1,7 +1,7 @@
 import { canAssignProposalForReview, canRecordProposalReview, canSubmitDeliverable, canSubmitProposal } from '../domain/projectLifecycle.js';
 import {
   createMilestone, createSubmission, createTask, findMilestone, findSubmission,
-  completeProjectIfReady, findTask, listReviewsForUser, listTasksForUser, reviewSubmission, updateMilestone,
+  completeProjectIfReady, findTask, listMilestonesForUser, listReviewsForUser, listTasksForUser, reviewSubmission, updateMilestone,
   updateTask
 } from '../repositories/workRepository.js';
 import {
@@ -11,6 +11,10 @@ import {
 
 export function listTasks(user) {
   return listTasksForUser(user);
+}
+
+export function listMilestones(user) {
+  return listMilestonesForUser(user);
 }
 
 export function addTask(user, input) {
