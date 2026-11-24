@@ -103,3 +103,12 @@ export function completeProjectIfReady(projectId) {
     db.prepare("UPDATE projects SET status = 'COMPLETED', updated_at = CURRENT_TIMESTAMP WHERE project_id = ? AND status = 'IN_PROGRESS'").run(projectId);
   }
 }
+
+export function listMilestonesForUser(user) {
+  const base = `SELECT m.*, p.title AS project_title FROM milestones m JOIN projects p ON p.project_id = m.project_id`;
+  if (user.role === 'SYSTEM_ADMIN') return db.prepare(base + ' ORDER BY m.due_date').all();
+  if (user.role === 'DEPARTMENT_ADMIN') return db.prepare(base + ' WHERE p.department_id = ? ORDER BY m.due_date').all(user.department_id);
+  return db.prepare(base + ` WHERE p.owner_id = ? OR p.guide_id = ? OR EXISTS (
+    SELECT 1 FROM project_members pm WHERE pm.project_id = p.project_id AND pm.user_id = ?
+  ) ORDER BY m.due_date`).all(user.user_id, user.user_id, user.user_id);
+}
