@@ -124,7 +124,7 @@ r.patch('/profile', auth, async (q, s, next) => {
     if (!name || name.length > 100 || !validEmail(email)) return s.status(400).json({ error: 'Enter a valid name and email address' });
     const current = db.prepare('SELECT * FROM users WHERE user_id=?').get(q.user.user_id);
     const changed = email !== current.email;
-    db.prepare('UPDATE users SET name=?,email=?,email_verified=CASE WHEN ? THEN 0 ELSE email_verified END WHERE user_id=?').run(name, email, changed ? 1 : 0, q.user.user_id);
+    db.prepare('UPDATE users SET name=?,email=?,email_verified=CASE WHEN ? THEN 0 ELSE email_verified END,session_version=session_version+? WHERE user_id=?').run(name, email, changed ? 1 : 0, changed ? 1 : 0, q.user.user_id);
     if (changed) {
       const token = issueToken(q.user.user_id, 'EMAIL_VERIFY', 24);
       await sendAuthEmail({ to: email, name, subject: 'Verify your new CampusFlow email', heading: 'Confirm your new email address', message: 'You changed the email address on your CampusFlow account. Confirm the new address to restore sign-in access.', actionLabel: 'Verify email', actionUrl: verificationUrl(token), expiry: '24 hours' });
