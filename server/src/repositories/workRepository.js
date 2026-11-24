@@ -91,3 +91,12 @@ export function findTask(taskId) {
 export function findMilestone(milestoneId) {
   return db.prepare('SELECT * FROM milestones WHERE milestone_id = ?').get(milestoneId);
 }
+
+export function completeProjectIfReady(projectId) {
+  const openTasks = db.prepare("SELECT COUNT(*) AS count FROM tasks WHERE project_id = ? AND status != 'COMPLETED'").get(projectId).count;
+  const openMilestones = db.prepare('SELECT COUNT(*) AS count FROM milestones WHERE project_id = ? AND is_completed = 0').get(projectId).count;
+  const approvedDeliverable = db.prepare("SELECT 1 FROM submissions WHERE project_id = ? AND submission_type = 'DELIVERABLE' AND status = 'APPROVED' LIMIT 1").get(projectId);
+  if (openTasks === 0 && openMilestones === 0 && approvedDeliverable) {
+    db.prepare("UPDATE projects SET status = 'COMPLETED', updated_at = CURRENT_TIMESTAMP WHERE project_id = ? AND status = 'IN_PROGRESS'").run(projectId);
+  }
+}
