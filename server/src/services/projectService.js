@@ -1,7 +1,7 @@
 import {
   addProjectMember, canManageProject, canViewProject, createProject, findProject,
   findUserByEmail, getProjectWorkspace, isProjectMember, listProjectsForUser,
-  notifyProjectMembers, notifyUser, removeProjectMember, setProjectGuide, updateProjectDetails
+  notifyProjectMembers, notifyUser, removeProjectMember, setProjectGuide, setProjectStatus, updateProjectDetails
 } from '../repositories/projectRepository.js';
 
 export function listProjects(user) {
@@ -63,4 +63,14 @@ export function assignGuide(user, projectId, email) {
   setProjectGuide(projectId, guide.user_id);
   notifyUser(guide.user_id, `You have been assigned as faculty guide for "${project.title}".`);
   return { user_id: guide.user_id, name: guide.name, email: guide.email };
+}
+
+export function startProject(user, projectId) {
+  const project = findProject(projectId);
+  if (!project) throw Object.assign(new Error('Project not found'), { status: 404 });
+  if (!canManageProject(project, user)) throw Object.assign(new Error('You cannot start this project'), { status: 403 });
+  if (project.status !== 'APPROVED') throw Object.assign(new Error('Only an approved project can be started'), { status: 409 });
+  setProjectStatus(projectId, 'IN_PROGRESS');
+  notifyProjectMembers(projectId, 'The project has started.', user.user_id);
+  return { success: true, status: 'IN_PROGRESS' };
 }
