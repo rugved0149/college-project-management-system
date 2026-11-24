@@ -6,13 +6,14 @@ import { recordAudit } from '../services/auditService.js';
 import { submissionUpload } from '../middleware/upload.js';
 import {
   addMilestone, addTask, assignSubmissionForReview, changeMilestone, changeTask, listReviews, listTasks,
-  getSubmissionFile, reviewProjectSubmission, submitProjectWork
+  getSubmissionFile, listMilestones, reviewProjectSubmission, submitProjectWork
 } from '../services/workService.js';
 
 const router = Router();
 router.use(auth);
 
 router.get('/tasks', (req, res) => res.json({ tasks: listTasks(req.user) }));
+router.get('/milestones', (req, res) => res.json({ milestones: listMilestones(req.user) }));
 
 router.post('/tasks', (req, res, next) => {
   try {
