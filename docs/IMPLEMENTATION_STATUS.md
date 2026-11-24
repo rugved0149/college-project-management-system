@@ -2,37 +2,39 @@
 
 ## Implemented
 
-- React/Vite workspace shell with role-aware navigation and responsive CampusFlow styling
-- JWT authentication, password hashing, active-account enforcement and current-user hydration from SQLite
-- Four application roles: Student, Faculty, Department Administrator and System Administrator
-- Department-scoped user listing, role changes and account activation controls
-- Project creation, listing, details, team membership and faculty-guide assignment
-- Department/global category management and category assignment during project creation
-- Project proposal and deliverable submission, file retrieval, version-aware review workflow and feedback
-- Task and milestone creation, assignment/progress updates and completion guard
-- In-app notifications
-- Department-scoped project reports
-- System configuration for registration availability
-- Role-permission records with API enforcement for category-management access
-- Audit records for successful account registration/login and administrative changes
-- SQLite schema, indexes, foreign-key constraints and additive category migration
-- Render Blueprint for API/static frontend and persistent API storage
-- Supplied UML diagram set reviewed and mapped in `docs/DIAGRAM_TRACEABILITY.md`; original image exports remain in the project reference ZIP and are not yet committed as individual repository assets
-- Diagram-to-implementation matrix in `docs/DIAGRAM_TRACEABILITY.md`
+- React/Vite responsive CampusFlow workspace with role-aware navigation
+- Student registration and sign-in; bcrypt password hashing, JWT authentication and active-account enforcement
+- Four roles: Student, Faculty, Department Administrator and System Administrator
+- Project list, create, category selection and access-controlled project detail
+- Team membership management and faculty-guide assignment
+- Task and milestone creation, assignment, progress updates and due dates
+- Proposal and final-deliverable file upload to private server storage
+- Authenticated submission downloads and faculty feedback history
+- Proposal review assignment, approve/revision/reject decisions and lifecycle transitions
+- Explicit start action for approved projects
+- Completion guard: approved final deliverable plus all tasks and milestones completed
+- Notifications for account, team, project and review events
+- Department-scoped people administration, category management and reports
+- System settings, role-permission records and audit-log console
+- SQLite schema with foreign keys, indexes and additive category migration
+- Layered modular-monolith structure: routes, services, repositories, middleware and database connection
+- Render Blueprint with static frontend, API service and persistent storage
+- UML traceability matrix for all 20 supplied diagram exports
 
 ## Remaining before production
 
-- Automated API integration tests and browser-level end-to-end workflow tests
-- Extend audit coverage to project lifecycle transitions, submissions, downloads and all security-sensitive operations
-- Apply role-permission configuration consistently to all permission-sensitive service operations
-- Add department editing UI and department deactivation policy
-- Verify upload file content (MIME sniffing), malware scanning and configurable upload limits
+- Run the GitHub Actions build and syntax-check workflow and resolve any failures
+- Add automated API integration tests and browser-level end-to-end tests for all four roles
+- Extend authorization tests for cross-department and non-member access
+- Add file content sniffing, malware scanning and configurable upload limits
 - Add password reset and email verification
-- Validate database backup/restore, persistent-disk behavior and production deployment
-- Conduct a security review of authorization, upload handling, rate limits and error handling
+- Complete department CRUD and any missing system-administration use cases
+- Validate SQLite backup/restore and persistent-disk behavior
+- Deploy to Render and verify CORS, build-time API URL, uploads and database persistence
+- Conduct a security review of authentication, authorization, upload handling, rate limits and error handling
 
-## UML reconciliation
+## Model reconciliation
 
-The class diagram's `ProjectStatus` enum omits `UNDER_REVIEW` and `REVISION_REQUIRED`, while the state diagram uses both. The implementation keeps both states to preserve the modeled proposal-review-revision workflow.
+The supplied class diagram's ProjectStatus enum lists DRAFT, PROPOSAL_SUBMITTED, APPROVED, IN_PROGRESS, COMPLETED and REJECTED. The state diagram additionally uses UNDER_REVIEW and REVISION_REQUIRED. The implementation retains those two workflow states so the proposal review and revision loop can function.
 
-See `docs/DIAGRAM_TRACEABILITY.md` for the diagram-by-diagram implementation mapping and outstanding alignment work.
+The supplied diagrams remain the design authority. The PNG exports were supplied in a ZIP; individual image assets are not currently committed to this repository.
