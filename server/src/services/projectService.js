@@ -1,3 +1,4 @@
+import { canStartProject } from '../domain/projectLifecycle.js';
 import {
   addProjectMember, canManageProject, canViewProject, createProject, findActiveCategory, findProject, listActiveCategoriesForDepartment,
   findUserByEmail, getProjectWorkspace, isProjectMember, listProjectsForUser,
@@ -79,7 +80,7 @@ export function startProject(user, projectId) {
   const project = findProject(projectId);
   if (!project) throw Object.assign(new Error('Project not found'), { status: 404 });
   if (!canManageProject(project, user)) throw Object.assign(new Error('You cannot start this project'), { status: 403 });
-  if (project.status !== 'APPROVED') throw Object.assign(new Error('Only an approved project can be started'), { status: 409 });
+  if (!canStartProject(project.status)) throw Object.assign(new Error('Only an approved project can be started'), { status: 409 });
   setProjectStatus(projectId, 'IN_PROGRESS');
   notifyProjectMembers(projectId, 'The project has started.', user.user_id);
   return { success: true, status: 'IN_PROGRESS' };
