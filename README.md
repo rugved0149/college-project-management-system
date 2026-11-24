@@ -28,6 +28,12 @@ Configure a unique JWT_SECRET (24+ characters) and initial administrator credent
 ## Roles
 STUDENT, FACULTY, DEPARTMENT_ADMIN, SYSTEM_ADMIN
 
+## Administration
+
+The administration console supports department-scoped category management, system-level department management, registration policy configuration, role-permission controls and audit-log review. Student project creation can optionally assign an active category available to the student's department.
+
+See [UML diagram traceability](docs/DIAGRAM_TRACEABILITY.md) for the supplied diagram-to-code mapping and known model reconciliations.
+
 ## Project lifecycle
 DRAFT → PROPOSAL_SUBMITTED → UNDER_REVIEW → REVISION_REQUIRED / APPROVED / REJECTED → IN_PROGRESS → COMPLETED.
 
