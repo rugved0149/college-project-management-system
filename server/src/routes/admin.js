@@ -50,6 +50,31 @@ r.get('/reports',(q,s)=>{
   s.json({summary:{totalProjects:total,totalUsers:db.prepare(`SELECT COUNT(*) n FROM users WHERE ${isSystem(q)?'1=1':'department_id=?'}`).get(...args).n,completed,completionRate:total?Math.round(completed/total*100):0},byStatus:db.prepare(`SELECT status,COUNT(*) count FROM projects WHERE ${where} GROUP BY status`).all(...args),recent:db.prepare(`SELECT p.*,u.name owner_name FROM projects p JOIN users u ON u.user_id=p.owner_id WHERE ${isSystem(q)?'1=1':'p.department_id=?'} ORDER BY p.updated_at DESC LIMIT 8`).all(...args)});
 });
 
+
+r.get('/departments',allow('SYSTEM_ADMIN'),(q,s)=>{
+  s.json({departments:db.prepare('SELECT department_id,name FROM departments ORDER BY name').all()});
+});
+r.post('/departments',allow('SYSTEM_ADMIN'),(q,s)=>{
+  const name=String(q.body.name||'').trim();
+  if(!name||name.length>100)return fail(s,400,'Department name must contain 1–100 characters');
+  try{
+    const info=db.prepare('INSERT INTO departments(name) VALUES(?)').run(name);
+    audit(q,'DEPARTMENT_CREATED','DEPARTMENT',info.lastInsertRowid,{name});
+    s.status(201).json({department:db.prepare('SELECT department_id,name FROM departments WHERE department_id=?').get(info.lastInsertRowid)});
+  }catch(e){if(String(e.message).includes('UNIQUE'))return fail(s,409,'Department already exists');throw e;}
+});
+r.patch('/departments/:id',allow('SYSTEM_ADMIN'),(q,s)=>{
+  const department=db.prepare('SELECT department_id,name FROM departments WHERE department_id=?').get(q.params.id);
+  if(!department)return fail(s,404,'Department not found');
+  const name=String(q.body.name||'').trim();
+  if(!name||name.length>100)return fail(s,400,'Department name must contain 1–100 characters');
+  try{
+    db.prepare('UPDATE departments SET name=? WHERE department_id=?').run(name,department.department_id);
+    audit(q,'DEPARTMENT_RENAMED','DEPARTMENT',department.department_id,{from:department.name,to:name});
+    s.json({success:true});
+  }catch(e){if(String(e.message).includes('UNIQUE'))return fail(s,409,'Department already exists');throw e;}
+});
+
 r.get('/categories',allowPermission('categories.manage','DEPARTMENT_ADMIN','SYSTEM_ADMIN'),(q,s)=>{
   const filter=scope(q,'');
   const rows=db.prepare(`SELECT c.*,d.name department_name FROM categories c LEFT JOIN departments d ON d.department_id=c.department_id WHERE ${isSystem(q)?'1=1':'c.department_id=?'} ORDER BY c.name`).all(...(isSystem(q)?[]:[q.user.department_id]));
