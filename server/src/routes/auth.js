@@ -79,7 +79,7 @@ r.post('/login', authLimiter, (q, s) => {
   const u = db.prepare('SELECT * FROM users WHERE email=? AND is_active=1').get(email);
   if (!u || !bcrypt.compareSync(String(q.body.password || ''), u.password_hash)) return s.status(401).json({ error: 'Invalid email or password' });
   if (!u.email_verified) return s.status(403).json({ error: 'Verify your email before signing in. You can request a new verification link below.' });
-  const token = jwt.sign({ user_id: u.user_id }, process.env.JWT_SECRET, { expiresIn: '12h' });
+  const token = jwt.sign({ user_id: u.user_id, session_version: u.session_version }, process.env.JWT_SECRET, { expiresIn: '12h' });
   recordAccess(u.user_id, 'LOGIN_SUCCESS', q);
   s.json({ token, user: publicUser(u) });
 });
@@ -104,7 +104,7 @@ r.post('/reset-password', authLimiter, (q, s, next) => {
     const record = db.prepare("SELECT token_id,user_id FROM auth_tokens WHERE token_hash=? AND purpose='PASSWORD_RESET' AND datetime(expires_at)>datetime('now')").get(tokenHash(token));
     if (!record) return s.status(400).json({ error: 'Reset link is invalid or expired. Request a new one.' });
     db.transaction(() => {
-      db.prepare('UPDATE users SET password_hash=? WHERE user_id=?').run(bcrypt.hashSync(password, 12), record.user_id);
+      db.prepare('UPDATE users SET password_hash=?,session_version=session_version+1 WHERE user_id=?').run(bcrypt.hashSync(password, 12), record.user_id);
       db.prepare('DELETE FROM auth_tokens WHERE user_id=? AND purpose=\'PASSWORD_RESET\'').run(record.user_id);
     })();
     recordAccess(record.user_id, 'PASSWORD_RESET_COMPLETED', q);
