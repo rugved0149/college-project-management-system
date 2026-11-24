@@ -89,3 +89,11 @@ export function notifyProjectMembers(projectId, message, exceptUserId = null) {
   }));
   tx();
 }
+
+export function setProjectGuide(projectId, guideId) {
+  db.prepare('UPDATE projects SET guide_id = ?, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?').run(guideId, projectId);
+}
+
+export function listProjectMembers(projectId) {
+  return db.prepare('SELECT user_id FROM project_members WHERE project_id = ?').all(projectId);
+}
