@@ -1,6 +1,5 @@
-import { db } from '../config/database.js';
 import {
-  addProjectMember, canManageProject, canViewProject, createProject, findProject,
+  addProjectMember, canManageProject, canViewProject, createProject, findActiveCategory, findProject,
   findUserByEmail, getProjectWorkspace, isProjectMember, listProjectsForUser,
   notifyProjectMembers, notifyUser, removeProjectMember, setProjectGuide, setProjectStatus, updateProjectDetails
 } from '../repositories/projectRepository.js';
@@ -14,7 +13,7 @@ export function createUserProject(user, input) {
   if (!input.title?.trim()) throw Object.assign(new Error('Project title is required'), { status: 400 });
   let categoryId=null;
   if(input.category_id!==undefined&&input.category_id!==null&&input.category_id!==''){
-    const category=db.prepare('SELECT category_id FROM categories WHERE category_id=? AND is_active=1 AND (department_id=? OR department_id IS NULL)').get(Number(input.category_id),user.department_id);
+    const category=findActiveCategory(Number(input.category_id),user.department_id);
     if(!category)throw Object.assign(new Error('Choose an active category from your department'),{status:400});
     categoryId=category.category_id;
   }
