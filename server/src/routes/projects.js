@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { db } from '../config/database.js';
 import {
   addMember, assignGuide, createUserProject, editProject, getProjectForUser,
   listProjects, removeMember, startProject
@@ -9,6 +10,10 @@ const router = Router();
 router.use(auth);
 
 router.get('/', (req, res) => res.json({ projects: listProjects(req.user) }));
+router.get('/categories',(req,res)=>{
+  const categories=db.prepare('SELECT category_id,name,description FROM categories WHERE is_active=1 AND (department_id=? OR department_id IS NULL) ORDER BY name').all(req.user.department_id);
+  res.json({categories});
+});
 
 router.post('/', (req, res, next) => {
   try {
