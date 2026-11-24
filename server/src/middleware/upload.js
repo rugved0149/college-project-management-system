@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { db } from '../config/database.js';
+import { validateFileSignature, scanWithClamAV } from './fileValidation.js';
 
 const uploadDirectory = path.resolve(process.env.UPLOAD_DIR || './storage/uploads');
 fs.mkdirSync(uploadDirectory, { recursive: true });
@@ -43,7 +44,18 @@ export const submissionUpload = {
         storage, fileFilter,
         limits: { fileSize: maxMB * 1024 * 1024, files: 1 }
       }).single(fieldName);
-      uploader(req, res, next);
+      uploader(req, res, async error => {
+        if (error) return next(error);
+        if (!req.file) return next();
+        try {
+          await validateFileSignature(req.file.path, path.extname(req.file.originalname).toLowerCase());
+          req.file.malwareScan = await scanWithClamAV(req.file.path);
+          next();
+        } catch (validationError) {
+          fs.unlink(req.file.path, () => {});
+          next(validationError);
+        }
+      });
     };
   }
 };
