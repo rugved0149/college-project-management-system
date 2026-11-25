@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import bcrypt from 'bcryptjs';
 
+process.env.NODE_ENV = 'test';
 process.env.DB_PATH = join(mkdtempSync(join(tmpdir(), 'campusflow-auth-')), 'test.db');
 process.env.JWT_SECRET = 'integration-test-secret-at-least-32-characters';
 process.env.CLIENT_URL = 'http://localhost:5173';
