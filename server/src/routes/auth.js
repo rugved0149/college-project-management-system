@@ -8,7 +8,7 @@ import { auth } from '../middleware/auth.js';
 import { createAuthToken, sendAuthEmail, verificationUrl, resetUrl } from '../services/emailService.js';
 
 const r = Router();
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many requests. Please try again later.' } });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: process.env.NODE_ENV === 'test' ? 100 : 8, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many requests. Please try again later.' } });
 const publicUser = u => ({ user_id: u.user_id, name: u.name, email: u.email, role: u.role, department_id: u.department_id });
 const tokenHash = token => crypto.createHash('sha256').update(String(token || '')).digest('hex');
 function recordAccess(userId, action, req) {
