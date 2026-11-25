@@ -104,3 +104,43 @@
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #a8c5e8;outline-offset:2px}
 button:disabled{cursor:not-allowed;opacity:.58}
 @media(max-width:600px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.work-row small{overflow-wrap:anywhere}.workspace-panel+.workspace-panel{margin-top:14px}}
+
+
+/* Final visual refinement */
+:root {
+  color-scheme: light;
+  --surface: #ffffff;
+  --surface-muted: #f7f9fc;
+  --line: #e5ebf2;
+  --ink: #1c2a3d;
+  --muted: #78879a;
+  --brand: #245b9e;
+}
+body { background: #f5f7fb; color: var(--ink); }
+.main { background: radial-gradient(ellipse at 82% 0%, #edf3fb 0, transparent 34%), #f6f8fb; }
+.sidebar { box-shadow: 5px 0 24px #0c1a2b12; }
+.sidebar nav a { transition: background .18s ease, color .18s ease, transform .18s ease; }
+.sidebar nav a:hover { transform: translateX(2px); }
+.topbar { background: #ffffffed; backdrop-filter: blur(14px); }
+.content { padding-top: 40px; }
+.page-heading { margin-bottom: 30px; }
+.page-heading h1 { letter-spacing: -1.15px; }
+.stat, .project-card, .workspace-panel, .admin-panel, .review-card, .info-card {
+  box-shadow: 0 2px 8px #24364b08;
+}
+.stat { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.stat:hover { transform: translateY(-2px); border-color: #d6e1ee; box-shadow: 0 10px 26px #24364b12; }
+.project-card { border-radius: 12px; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.project-card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px #263b5615; }
+.project-card h3 { line-height: 1.4; }
+.workspace-panel, .admin-panel, .review-card { border-radius: 12px; }
+.info-card { border: 1px solid #e5ebf2; background: linear-gradient(135deg, #f0f5fb, #f8fafd); }
+.primary { border-radius: 8px; transition: background .18s ease, transform .18s ease, box-shadow .18s ease; }
+.primary:hover { transform: translateY(-1px); box-shadow: 0 5px 12px #183e6b25; }
+.secondary, .admin-action { transition: background .18s ease, border-color .18s ease; }
+.modal { border: 1px solid #e5ebf2; border-radius: 14px; }
+.empty { background: #ffffffd9; }
+.search:focus-within { border-color: #9bb6d5; box-shadow: 0 0 0 3px #eaf1f9; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
