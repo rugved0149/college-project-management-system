@@ -27,8 +27,6 @@ services:
         sync: false
       - key: EMAIL_FROM_NAME
         value: CampusFlow
-      - key: CLAMAV_HOST
-        sync: false
       - key: CLAMAV_PORT
         value: '3310'
       - key: REQUIRE_MALWARE_SCAN
