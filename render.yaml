@@ -2,24 +2,29 @@ services:
   - type: web
     name: campusflow-api
     runtime: node
-    plan: starter
+    plan: free
+    region: singapore
     buildCommand: npm install
-    startCommand: npm run start -w server
+    startCommand: npm run seed -w server && npm run start -w server
     healthCheckPath: /api/health
-    disk:
-      name: campusflow-data
-      mountPath: /opt/render/project/src/server/storage
-      sizeGB: 1
     envVars:
       - key: NODE_VERSION
-        value: 20.19.0
+        value: 22.22.0
       - key: JWT_SECRET
         generateValue: true
       - key: DB_PATH
-        value: /opt/render/project/src/server/storage/college_projects.db
+        value: ./server/storage/college_projects.db
+      - key: UPLOAD_DIR
+        value: ./server/storage/uploads
       - key: CLIENT_URL
         sync: false
       - key: APP_URL
+        sync: false
+      - key: INITIAL_ADMIN_NAME
+        value: CampusFlow Administrator
+      - key: INITIAL_ADMIN_EMAIL
+        value: admin@campusflow.demo
+      - key: INITIAL_ADMIN_PASSWORD
         sync: false
       - key: BREVO_API_KEY
         sync: false
@@ -27,8 +32,6 @@ services:
         sync: false
       - key: EMAIL_FROM_NAME
         value: CampusFlow
-      - key: CLAMAV_PORT
-        value: '3310'
       - key: REQUIRE_MALWARE_SCAN
         value: 'false'
   - type: web
